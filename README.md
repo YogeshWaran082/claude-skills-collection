@@ -1,6 +1,6 @@
 # Claude Skills Collection
 
-A curated, folder-organized collection of **80 Claude Skills** (`*-SKILL.md`) covering design, research, video production, engineering, app integrations, DevOps, product & marketing, office documents, data & finance, sales & support, HR & legal, and operations.
+A curated, folder-organized collection of **86 Claude Skills** (`*-SKILL.md`) covering design, research, video production, engineering, app integrations, DevOps, product & marketing, office documents, data & finance, sales & support, HR & legal, and operations.
 
 See [`COMMUNITY_RESOURCES.md`](./COMMUNITY_RESOURCES.md) for upstream community repositories and plugin directories.
 
@@ -11,16 +11,16 @@ See [`COMMUNITY_RESOURCES.md`](./COMMUNITY_RESOURCES.md) for upstream community 
 | [`designing/`](./designing) | UI/UX design, design systems, branding, Figma-to-code, landing pages | 17 |
 | [`ux-research-and-copy/`](./ux-research-and-copy) | User research, market research, synthesis, UX & long-form copy | 5 |
 | [`video-and-motion/`](./video-and-motion) | Video direction, animatics, beat boards, AI video prompting | 8 |
-| [`engineering/`](./engineering) | Backend, frontend, security, MCP, testing, code review, API & SQL | 10 |
-| [`integrations/`](./integrations) | Slack, Jira, Confluence, Google Calendar, Stripe integrations | 5 |
-| [`devops-and-docs/`](./devops-and-docs) | Git/PRs, CI/CD, incident response, changelogs, technical docs | 6 |
+| [`engineering/`](./engineering) | Backend, frontend, security, browser testing, MCP, code review, API & SQL | 13 |
+| [`integrations/`](./integrations) | GitHub, Slack, Jira, Confluence, Google Calendar, Stripe integrations | 6 |
+| [`devops-and-docs/`](./devops-and-docs) | Git/PRs, commit commands, CI/CD, incident response, changelogs, docs | 7 |
 | [`product-and-growth/`](./product-and-growth) | PRDs, specs, PM, Scrum, campaigns, local SEO, social & copy | 9 |
 | [`documents-and-office/`](./documents-and-office) | Word (`.docx`), PDF, PowerPoint (`.pptx`), Excel (`.xlsx`) | 4 |
 | [`data-and-finance/`](./data-and-finance) | Dashboards, variance analysis, pricing strategy, invoices | 4 |
 | [`sales-and-support/`](./sales-and-support) | Client proposals, SOWs, lead research, support responses | 3 |
 | [`hr-and-legal/`](./hr-and-legal) | Onboarding plans, contract & NDA review | 2 |
 | [`operations-and-productivity/`](./operations-and-productivity) | SOPs, internal comms, task breakdown, meeting insights | 4 |
-| [`prompting-and-workflow/`](./prompting-and-workflow) | Skill authoring, prompt engineering, response style | 3 |
+| [`prompting-and-workflow/`](./prompting-and-workflow) | `CLAUDE.md` management, skill authoring, prompt engineering, response style | 4 |
 
 ---
 
@@ -64,9 +64,12 @@ See [`COMMUNITY_RESOURCES.md`](./COMMUNITY_RESOURCES.md) for upstream community 
 
 ### `engineering/`
 - [`api-architect-SKILL.md`](./engineering/api-architect-SKILL.md) — REST/GraphQL API design & OpenAPI specs
+- [`chrome-devtools-SKILL.md`](./engineering/chrome-devtools-SKILL.md) — DOM, network, console & Core Web Vitals debugging
 - [`code-reviewer-SKILL.md`](./engineering/code-reviewer-SKILL.md) — PR & diff review for bugs, security, and maintainability
 - [`debugger-root-cause-SKILL.md`](./engineering/debugger-root-cause-SKILL.md) — Systematic bug triage & root-cause analysis
 - [`mcp-builder-SKILL.md`](./engineering/mcp-builder-SKILL.md) — Build Model Context Protocol (MCP) servers
+- [`playwright-automation-SKILL.md`](./engineering/playwright-automation-SKILL.md) — Playwright E2E tests, selectors & visual checks
+- [`security-guidance-SKILL.md`](./engineering/security-guidance-SKILL.md) — OWASP Top 10, auth, secrets & secure coding
 - [`senior-backend-SKILL.md`](./engineering/senior-backend-SKILL.md) — Production backend architecture, resilience & observability
 - [`senior-frontend-SKILL.md`](./engineering/senior-frontend-SKILL.md) — Senior frontend architecture & performance
 - [`senior-security-SKILL.md`](./engineering/senior-security-SKILL.md) — Application security & threat modeling
@@ -76,6 +79,7 @@ See [`COMMUNITY_RESOURCES.md`](./COMMUNITY_RESOURCES.md) for upstream community 
 
 ### `integrations/`
 - [`confluence-expert-SKILL.md`](./integrations/confluence-expert-SKILL.md) — Confluence spaces, pages & documentation workflows
+- [`github-workflow-SKILL.md`](./integrations/github-workflow-SKILL.md) — GitHub PRs, issues, releases & `gh` CLI workflows
 - [`googlecalendar-automation-SKILL.md`](./integrations/googlecalendar-automation-SKILL.md) — Google Calendar event & scheduling automation
 - [`jira-expert-SKILL.md`](./integrations/jira-expert-SKILL.md) — Jira workflows, JQL, sprints & issue automation
 - [`slackbot-automation-SKILL.md`](./integrations/slackbot-automation-SKILL.md) — Slack bot & workspace automation
@@ -84,6 +88,7 @@ See [`COMMUNITY_RESOURCES.md`](./COMMUNITY_RESOURCES.md) for upstream community 
 ### `devops-and-docs/`
 - [`changelog-generator-SKILL.md`](./devops-and-docs/changelog-generator-SKILL.md) — Automated release changelogs from commits
 - [`ci-cd-github-actions-SKILL.md`](./devops-and-docs/ci-cd-github-actions-SKILL.md) — GitHub Actions pipelines & Dockerfiles
+- [`commit-commands-SKILL.md`](./devops-and-docs/commit-commands-SKILL.md) — Atomic git commits, branches, rebase & PR prep
 - [`documentation-SKILL.md`](./devops-and-docs/documentation-SKILL.md) — Technical & user guides, references, and runbooks
 - [`git-pr-writer-SKILL.md`](./devops-and-docs/git-pr-writer-SKILL.md) — Conventional Commits & PR descriptions
 - [`incident-response-SKILL.md`](./devops-and-docs/incident-response-SKILL.md) — Production incident triage, comms & postmortems
@@ -129,5 +134,6 @@ See [`COMMUNITY_RESOURCES.md`](./COMMUNITY_RESOURCES.md) for upstream community 
 
 ### `prompting-and-workflow/`
 - [`caveman-SKILL.md`](./prompting-and-workflow/caveman-SKILL.md) — Ultra-terse, high-signal response mode
+- [`claude-md-management-SKILL.md`](./prompting-and-workflow/claude-md-management-SKILL.md) — Project memory (`CLAUDE.md`) setup & maintenance
 - [`prompt-engineer-SKILL.md`](./prompting-and-workflow/prompt-engineer-SKILL.md) — System prompt design, few-shot examples & evals
 - [`skill-creator-SKILL.md`](./prompting-and-workflow/skill-creator-SKILL.md) — Meta-skill for authoring new `SKILL.md` files
