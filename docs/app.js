@@ -14,6 +14,8 @@ const state = {
     agent: "claude",
     scope: "global",
     target: "ALL",
+    listQuery: "",
+    listCategory: "ALL",
   },
 };
 
@@ -264,8 +266,20 @@ function getBuilderCommands() {
 }
 
 function renderNpmPage() {
-  const { agent, scope, target } = state.npmBuilder;
+  const { agent, scope, target, listQuery, listCategory } = state.npmBuilder;
   const { npxCmd, scriptCmd, curlCmd } = getBuilderCommands();
+  const agentFlag = agent === "claude" ? "claude-code" : agent;
+
+  const q = listQuery.trim().toLowerCase();
+  const npmList = state.skills.filter((s) => {
+    if (listCategory !== "ALL" && s.category !== listCategory) return false;
+    if (!q) return true;
+    return (
+      s.name.toLowerCase().includes(q) ||
+      s.category.toLowerCase().includes(q) ||
+      s.description.toLowerCase().includes(q)
+    );
+  });
 
   els.viewContent.innerHTML = `
     <div class="builder-card">
@@ -336,25 +350,56 @@ function renderNpmPage() {
       </div>
     </div>
 
-    <div class="panel-grid">
-      <div class="panel-card">
-        <h3>Useful npx skills Commands</h3>
-        <p>Search, install, list, and run skills on the fly with the open <code>skills</code> npm CLI:</p>
-        <pre class="code-block">npx skills find design
-npx skills add ${REPO_SLUG}
-npx skills list
-npx skills use ${REPO_SLUG}@code-reviewer</pre>
-        <button class="glass-btn primary copy-block-btn">Copy Commands</button>
+    <div class="directory-toolbar" style="margin-top:22px">
+      <div>
+        <h2 style="font-size:18px;font-weight:700">All ${state.skills.length} Skills — npm / npx Commands</h2>
+        <p style="font-size:13px;color:var(--text-secondary);margin-top:2px">Showing ${npmList.length} commands for <code>${escapeHtml(agentFlag)}</code></p>
       </div>
+      <div class="toolbar-controls">
+        <input type="text" id="npmSearchInput" class="glass-select" style="min-width:220px;cursor:text" placeholder="Filter npm commands..." value="${escapeHtml(listQuery)}" />
+        <button class="glass-btn primary" id="copyAllNpxBtn">Copy All (${npmList.length})</button>
+      </div>
+    </div>
 
-      <div class="panel-card">
-        <h3>Requirements</h3>
-        <p>Make sure Node.js 18+ (for <code>npx</code>) or Git + Bash (for <code>install.sh</code>) is installed:</p>
-        <pre class="code-block">node -v   # v18+ recommended
-npm -v    # comes with Node.js
-git --version</pre>
-        <button class="glass-btn primary copy-block-btn">Copy Check</button>
+    <div class="filter-bar">
+      <button class="filter-pill ${listCategory === "ALL" ? "active" : ""}" data-npm-cat="ALL">All (${state.skills.length})</button>
+      ${state.categories
+        .map(
+          (c) => `
+        <button class="filter-pill ${listCategory === c.name ? "active" : ""}" data-npm-cat="${escapeHtml(c.name)}">
+          ${escapeHtml(c.name)} (${c.count})
+        </button>`
+        )
+        .join("")}
+    </div>
+
+    <div class="directory-panel">
+      <div class="directory-header">
+        <span>All npm / npx Commands (${npmList.length})</span>
+        <span>One-click copy per skill</span>
       </div>
+      ${npmList
+        .map((s, idx) => {
+          const cmd = `npx skills add ${REPO_SLUG} --skill ${s.name} -a ${agentFlag}`;
+          return `
+        <div class="skill-row" style="cursor:default">
+          <div class="row-rank">#${idx + 1}</div>
+          <div class="row-title-wrap">
+            <div class="row-name">${escapeHtml(s.name)}</div>
+            <div class="row-path">
+              <span class="cat-badge">${escapeHtml(s.category)}</span>
+            </div>
+          </div>
+          <div class="cmd-output-row" style="margin-top:0;padding:8px 12px">
+            <code>${escapeHtml(cmd)}</code>
+          </div>
+          <div class="row-actions">
+            <button class="row-btn primary copy-npx-row-btn" data-npx="${escapeHtml(cmd)}">Copy npx</button>
+            <button class="row-btn inspect-npm-btn" data-id="${escapeHtml(s.id)}">Inspect</button>
+          </div>
+        </div>`;
+        })
+        .join("")}
     </div>
   `;
 
@@ -371,17 +416,43 @@ git --version</pre>
     renderNpmPage();
   });
 
+  const npmSearch = document.getElementById("npmSearchInput");
+  npmSearch.addEventListener("input", (e) => {
+    state.npmBuilder.listQuery = e.target.value;
+    renderNpmPage();
+    const el = document.getElementById("npmSearchInput");
+    if (el) {
+      el.focus();
+      el.setSelectionRange(el.value.length, el.value.length);
+    }
+  });
+
+  document.getElementById("copyAllNpxBtn").addEventListener("click", () => {
+    const all = npmList.map((s) => `npx skills add ${REPO_SLUG} --skill ${s.name} -a ${agentFlag}`).join("\n");
+    copyText(all, `Copied ${npmList.length} npx commands`);
+  });
+
+  els.viewContent.querySelectorAll("[data-npm-cat]").forEach((pill) => {
+    pill.addEventListener("click", () => {
+      state.npmBuilder.listCategory = pill.dataset.npmCat;
+      renderNpmPage();
+    });
+  });
+
+  els.viewContent.querySelectorAll(".copy-npx-row-btn").forEach((btn) => {
+    btn.addEventListener("click", () => {
+      copyText(btn.dataset.npx, "Copied npx command");
+    });
+  });
+
+  els.viewContent.querySelectorAll(".inspect-npm-btn").forEach((btn) => {
+    btn.addEventListener("click", () => openSkillModal(btn.dataset.id));
+  });
+
   els.viewContent.querySelectorAll("[data-copy-target]").forEach((btn) => {
     btn.addEventListener("click", () => {
       const code = document.getElementById(btn.dataset.copyTarget)?.textContent || "";
       copyText(code, "Copied command");
-    });
-  });
-
-  els.viewContent.querySelectorAll(".copy-block-btn").forEach((btn) => {
-    btn.addEventListener("click", () => {
-      const code = btn.previousElementSibling?.textContent || "";
-      copyText(code, "Copied commands");
     });
   });
 }
