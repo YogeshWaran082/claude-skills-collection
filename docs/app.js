@@ -749,7 +749,7 @@ function renderAudits() {
               <span class="row-lines">${s.tier} • ${s.lines} lines</span>
             </div>
           </div>
-          <div class="row-desc">YAML frontmatter verified • Trigger description present • Clean markdown instructions</div>
+          <div class="row-desc">YAML frontmatter verified • Description present • Clean markdown</div>
           <div class="row-actions">
             <span class="audit-badge">${s.passed ? "✓ Verified" : "Review"}</span>
             <button class="row-btn inspect-btn" data-id="${escapeHtml(s.id)}">Inspect</button>
@@ -1194,8 +1194,8 @@ function render() {
   });
   els.searchInput.placeholder =
     state.searchMode === "all_skills"
-      ? "Search All Skills imported from Skills.sh (server-side)..."
-      : "Search My Collection (e.g. figma, playwright, pdf, code-reviewer)...";
+      ? "Search All Skills (server-side)..."
+      : "Search My Collection (figma, pdf, code)...";
 
   els.heroSection.style.display = state.tab === "directory" ? "block" : "none";
 
@@ -1253,6 +1253,7 @@ async function init() {
     tab.addEventListener("click", () => {
       state.tab = tab.dataset.tab;
       render();
+      window.scrollTo({ top: 0, behavior: "instant" });
     });
   });
 

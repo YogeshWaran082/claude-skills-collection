@@ -171,6 +171,7 @@ body {
 .glass-btn {
   display: inline-flex;
   align-items: center;
+  justify-content: center;
   gap: 7px;
   padding: 7px 13px;
   border-radius: 11px;
@@ -925,6 +926,7 @@ body {
   border-radius: 999px;
   background: var(--input-bg);
   color: var(--text-secondary);
+  white-space: nowrap;
 }
 
 .row-lines {
@@ -958,6 +960,9 @@ body {
   font-size: 12px;
   font-weight: 500;
   cursor: pointer;
+  display: inline-flex;
+  align-items: center;
+  justify-content: center;
   transition: all 0.14s ease;
 }
 
@@ -1011,6 +1016,7 @@ body {
   border: 1px solid var(--border-subtle);
   overflow-x: auto;
   white-space: pre-wrap;
+  word-break: break-word;
 }
 
 /* Modal */
@@ -1371,6 +1377,45 @@ body {
 }
 
 @media (max-width: 820px) {
+  .navbar {
+    position: relative;
+    top: 0;
+  }
+  .nav-inner {
+    flex-wrap: wrap;
+    gap: 10px;
+  }
+  .nav-links {
+    order: 3;
+    width: 100%;
+    flex-wrap: wrap;
+    justify-content: center;
+    overflow-x: visible;
+  }
+  .nav-tab {
+    padding: 5px 10px;
+    font-size: 12px;
+  }
+  .cli-pill {
+    flex-wrap: wrap;
+    padding: 10px 12px;
+  }
+  .cli-cmd {
+    white-space: pre-wrap;
+    word-break: break-word;
+    flex-basis: calc(100% - 24px);
+  }
+  .copy-pill-btn {
+    width: 100%;
+  }
+  .cmd-output-row {
+    flex-direction: column;
+    align-items: stretch;
+  }
+  .cmd-output-row code {
+    white-space: pre-wrap;
+    word-break: break-all;
+  }
   .search-mode-bar {
     width: 100%;
     justify-content: center;
@@ -1383,6 +1428,16 @@ body {
   }
   .builder-grid {
     grid-template-columns: 1fr;
+  }
+  .skill-row {
+    grid-template-columns: 34px 1fr;
+    gap: 10px;
+  }
+  .row-desc, .row-actions, .npm-cmd-cell {
+    grid-column: 2;
+  }
+  .directory-header {
+    display: none;
   }
   .site-footer {
     padding: 28px 22px 22px;
@@ -1399,21 +1454,5 @@ body {
   }
   .footer-form input {
     width: 180px;
-  }
-  .skill-row {
-    grid-template-columns: 34px 1fr;
-    gap: 10px;
-  }
-  .row-desc, .row-actions {
-    grid-column: 2;
-  }
-  .directory-header {
-    display: none;
-  }
-  .nav-inner {
-    flex-wrap: wrap;
-  }
-  #themeLabel {
-    display: none;
   }
 }
