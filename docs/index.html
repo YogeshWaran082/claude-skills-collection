@@ -63,13 +63,23 @@
         <button class="copy-pill-btn" id="copyHeroCliBtn">Copy</button>
       </div>
 
+      <!-- Search Mode Switcher: My Collection (default) vs Skills.sh Live -->
+      <div class="search-mode-bar" role="tablist" aria-label="Search mode">
+        <button class="search-mode-btn active" id="modeCollectionBtn" data-search-mode="collection" role="tab" aria-selected="true">
+          My Collection <span class="mode-count" id="modeCollectionCount">90</span>
+        </button>
+        <button class="search-mode-btn" id="modeSkillsShBtn" data-search-mode="skills_sh" role="tab" aria-selected="false">
+          Skills.sh <span class="mode-live-tag">Live Search</span>
+        </button>
+      </div>
+
       <!-- Big Search Bar -->
       <div class="search-shell">
         <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.8">
           <circle cx="11" cy="11" r="7" />
           <line x1="21" y1="21" x2="16.65" y2="16.65" />
         </svg>
-        <input type="text" id="searchInput" placeholder="Search skills (e.g. figma, playwright, pdf, code-reviewer, video)..." />
+        <input type="text" id="searchInput" placeholder="Search My Collection (e.g. figma, playwright, pdf, code-reviewer)..." />
         <kbd class="kbd-chip">⌘K</kbd>
       </div>
 

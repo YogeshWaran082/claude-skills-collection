@@ -18,6 +18,7 @@ const state = {
   skills: [],
   categories: [],
   tab: "directory", // directory | npm | audits | install | community
+  searchMode: "collection", // collection | skills_sh
   leaderboardMode: "all_time", // all_time | trending | hot
   selectedAgentFlag: "claude-code",
   activeCategory: "ALL",
@@ -25,6 +26,13 @@ const state = {
   sortBy: "name", // name | category | lines_desc | lines_asc
   savedIds: new Set(JSON.parse(localStorage.getItem("skilllab-saved") || "[]")),
   selectedSkill: null,
+  remote: {
+    status: "idle", // idle | loading | ready | empty | unavailable
+    results: [],
+    total: null,
+    error: "",
+    lastQuery: "",
+  },
   npmBuilder: {
     agent: "claude",
     scope: "global",
@@ -33,6 +41,9 @@ const state = {
     listCategory: "ALL",
   },
 };
+
+let remoteAbortController = null;
+let remoteDebounceTimer = null;
 
 const els = {
   heroSection: document.getElementById("heroSection"),
@@ -125,7 +136,176 @@ function getFilteredSkills() {
   });
 }
 
+function renderSkillsShDirectory() {
+  const q = state.searchQuery.trim();
+  const openSkillsShUrl = q
+    ? `https://www.skills.sh/?q=${encodeURIComponent(q)}`
+    : "https://www.skills.sh/";
+
+  const totalText =
+    typeof state.remote.total === "number" && Number.isFinite(state.remote.total)
+      ? ` • ${state.remote.total.toLocaleString()} indexed`
+      : "";
+
+  let bodyHtml = "";
+
+  if (q.length < 2) {
+    bodyHtml = `
+      <div class="remote-state-card">
+        <h3>Live Search Skills.sh</h3>
+        <p>Enter at least 2 characters above to search live skills from the Skills.sh directory (up to 24 results per query).</p>
+        <a class="glass-btn" href="${openSkillsShUrl}" target="_blank" rel="noopener">Open Skills.sh ↗</a>
+      </div>`;
+  } else if (state.remote.status === "loading") {
+    bodyHtml = `
+      <div class="remote-state-card">
+        <h3>Searching Skills.sh…</h3>
+        <p>Fetching live results for "${escapeHtml(q)}".</p>
+      </div>`;
+  } else if (state.remote.status === "unavailable") {
+    bodyHtml = `
+      <div class="remote-state-card">
+        <h3>Skills.sh Live Search Unavailable</h3>
+        <p>${escapeHtml(state.remote.error || "Live search requires the Vercel OIDC API route and is unavailable on static hosting.")}</p>
+        <a class="glass-btn primary" href="${openSkillsShUrl}" target="_blank" rel="noopener">Open Skills.sh ↗</a>
+      </div>`;
+  } else if (state.remote.status === "empty" || !state.remote.results.length) {
+    bodyHtml = `
+      <div class="remote-state-card">
+        <h3>No matching skills found on Skills.sh</h3>
+        <p>No live results matched "${escapeHtml(q)}". Try another keyword or browse Skills.sh directly.</p>
+        <a class="glass-btn" href="${openSkillsShUrl}" target="_blank" rel="noopener">Open Skills.sh ↗</a>
+      </div>`;
+  } else {
+    bodyHtml = state.remote.results
+      .map((item, idx) => {
+        const installsLabel =
+          typeof item.installs === "number"
+            ? `${item.installs.toLocaleString()} installs`
+            : "Live result";
+        const installCmd =
+          item.isValidGitHubSource && item.slug
+            ? `npx skills add ${item.source} --skill ${item.slug}`
+            : "";
+
+        return `
+        <div class="skill-row" style="cursor:default">
+          <div class="row-rank">#${idx + 1}</div>
+          <div class="row-title-wrap">
+            <div class="row-name">${escapeHtml(item.name)}</div>
+            <div class="row-path">
+              <span class="cat-badge">${escapeHtml(item.source)}</span>
+              <span class="row-lines">${escapeHtml(installsLabel)}</span>
+            </div>
+          </div>
+          <div class="row-desc">${escapeHtml(item.description || `Source repository: ${item.source}`)}</div>
+          <div class="row-actions">
+            ${
+              installCmd
+                ? `<button class="row-btn primary copy-remote-cmd-btn" data-cmd="${escapeHtml(installCmd)}">Copy Install Command</button>`
+                : ""
+            }
+            <a class="row-btn" href="${escapeHtml(item.url)}" target="_blank" rel="noopener">View Skill ↗</a>
+          </div>
+        </div>`;
+      })
+      .join("");
+  }
+
+  els.viewContent.innerHTML = `
+    <div class="directory-panel">
+      <div class="directory-header">
+        <span>Skills.sh Live Search${totalText} (${state.remote.results.length})</span>
+        <span>Up to 24 live results per query</span>
+      </div>
+      ${bodyHtml}
+    </div>
+  `;
+
+  els.viewContent.querySelectorAll(".copy-remote-cmd-btn").forEach((btn) => {
+    btn.addEventListener("click", () => {
+      copyText(btn.dataset.cmd, "Copied npx install command");
+    });
+  });
+}
+
+function triggerSkillsShSearch(immediate = false) {
+  clearTimeout(remoteDebounceTimer);
+  if (remoteAbortController) {
+    remoteAbortController.abort();
+    remoteAbortController = null;
+  }
+
+  const q = state.searchQuery.trim();
+  if (q.length < 2) {
+    state.remote.status = "idle";
+    state.remote.results = [];
+    state.remote.total = null;
+    state.remote.error = "";
+    state.remote.lastQuery = q;
+    if (state.tab === "directory" && state.searchMode === "skills_sh") render();
+    return;
+  }
+
+  state.remote.status = "loading";
+  state.remote.error = "";
+  if (state.tab === "directory" && state.searchMode === "skills_sh") render();
+
+  const runFetch = async () => {
+    const controller = new AbortController();
+    remoteAbortController = controller;
+    try {
+      const res = await fetch(
+        `/api/skills-search?q=${encodeURIComponent(q)}&limit=24`,
+        { signal: controller.signal }
+      );
+      if (!res.ok) {
+        let errMsg = "Skills.sh live search is unavailable right now.";
+        try {
+          const errJson = await res.json();
+          if (errJson?.error) errMsg = errJson.error;
+        } catch {
+          // Non-JSON error response (e.g. 404/501 on static hosting)
+        }
+        state.remote.status = "unavailable";
+        state.remote.results = [];
+        state.remote.total = null;
+        state.remote.error = errMsg;
+      } else {
+        const data = await res.json();
+        const items = Array.isArray(data?.skills) ? data.skills.slice(0, 24) : [];
+        state.remote.results = items;
+        state.remote.total =
+          typeof data?.total === "number" && Number.isFinite(data.total) ? data.total : null;
+        state.remote.status = items.length ? "ready" : "empty";
+        state.remote.error = "";
+      }
+      state.remote.lastQuery = q;
+      if (state.tab === "directory" && state.searchMode === "skills_sh") render();
+    } catch (err) {
+      if (err?.name === "AbortError") return;
+      state.remote.status = "unavailable";
+      state.remote.results = [];
+      state.remote.total = null;
+      state.remote.error = "Unable to reach the Skills.sh search API from this host.";
+      if (state.tab === "directory" && state.searchMode === "skills_sh") render();
+    } finally {
+      if (remoteAbortController === controller) {
+        remoteAbortController = null;
+      }
+    }
+  };
+
+  if (immediate) runFetch();
+  else remoteDebounceTimer = setTimeout(runFetch, 260);
+}
+
 function renderDirectory() {
+  if (state.searchMode === "skills_sh") {
+    renderSkillsShDirectory();
+    return;
+  }
+
   const list = getFilteredSkills();
 
   els.viewContent.innerHTML = `
@@ -705,6 +885,16 @@ function render() {
   document.querySelectorAll(".nav-tab").forEach((t) => {
     t.classList.toggle("active", t.dataset.tab === state.tab);
   });
+  document.querySelectorAll(".search-mode-btn").forEach((btn) => {
+    const active = btn.dataset.searchMode === state.searchMode;
+    btn.classList.toggle("active", active);
+    btn.setAttribute("aria-selected", active ? "true" : "false");
+  });
+  els.searchInput.placeholder =
+    state.searchMode === "skills_sh"
+      ? "Search Skills.sh live (min 2 chars, e.g. react, figma, playwright)..."
+      : "Search My Collection (e.g. figma, playwright, pdf, code-reviewer)...";
+
   els.heroSection.style.display = state.tab === "directory" ? "block" : "none";
 
   if (state.tab === "directory") renderDirectory();
@@ -734,6 +924,26 @@ async function init() {
     .map(([name, count]) => ({ name, count }));
 
   els.heroCountBadge.textContent = `${state.skills.length} Skills • ${state.categories.length} Categories`;
+  const modeCountEl = document.getElementById("modeCollectionCount");
+  if (modeCountEl) modeCountEl.textContent = state.skills.length;
+
+  document.querySelectorAll(".search-mode-btn").forEach((btn) => {
+    btn.addEventListener("click", () => {
+      const nextMode = btn.dataset.searchMode;
+      if (state.searchMode === nextMode) return;
+      state.searchMode = nextMode;
+      state.tab = "directory";
+      if (nextMode === "collection" && remoteAbortController) {
+        clearTimeout(remoteDebounceTimer);
+        remoteAbortController.abort();
+        remoteAbortController = null;
+      } else if (nextMode === "skills_sh") {
+        triggerSkillsShSearch(true);
+        return;
+      }
+      render();
+    });
+  });
 
   document.querySelectorAll(".nav-tab").forEach((tab) => {
     tab.addEventListener("click", () => {
@@ -752,7 +962,11 @@ async function init() {
   els.searchInput.addEventListener("input", (e) => {
     state.searchQuery = e.target.value;
     state.tab = "directory";
-    render();
+    if (state.searchMode === "skills_sh") {
+      triggerSkillsShSearch(false);
+    } else {
+      render();
+    }
   });
 
   document.getElementById("copyHeroCliBtn").addEventListener("click", () => {
