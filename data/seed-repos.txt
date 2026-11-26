@@ -1,0 +1,5 @@
+vercel-labs/agent-skills
+anthropics/skills
+ComposioHQ/awesome-claude-skills
+alirezarezvani/claude-skills
+YogeshWaran082/claude-skills-collection

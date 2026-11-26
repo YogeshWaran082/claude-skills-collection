@@ -18,7 +18,7 @@ const state = {
   skills: [],
   categories: [],
   tab: "directory", // directory | npm | audits | install | community
-  searchMode: "collection", // collection | skills_sh
+  searchMode: "collection", // collection | all_skills
   leaderboardMode: "all_time", // all_time | trending | hot
   selectedAgentFlag: "claude-code",
   activeCategory: "ALL",
@@ -29,9 +29,12 @@ const state = {
   remote: {
     status: "idle", // idle | loading | ready | empty | unavailable
     results: [],
-    total: null,
+    total: 0,
+    importedCount: 0,
+    targetCount: 566000,
+    page: 1,
+    totalPages: 1,
     error: "",
-    lastQuery: "",
   },
   npmBuilder: {
     agent: "claude",
@@ -136,53 +139,51 @@ function getFilteredSkills() {
   });
 }
 
-function renderSkillsShDirectory() {
+function renderAllSkillsDirectory() {
   const q = state.searchQuery.trim();
   const openSkillsShUrl = q
     ? `https://www.skills.sh/?q=${encodeURIComponent(q)}`
     : "https://www.skills.sh/";
 
-  const totalText =
-    typeof state.remote.total === "number" && Number.isFinite(state.remote.total)
-      ? ` • ${state.remote.total.toLocaleString()} indexed`
-      : "";
+  const importedLabel = `${state.remote.importedCount.toLocaleString()} Imported`;
+  const countBadge = document.getElementById("modeAllSkillsCount");
+  if (countBadge) countBadge.textContent = importedLabel;
 
   let bodyHtml = "";
+  let paginationHtml = "";
 
-  if (q.length < 2) {
+  if (state.remote.status === "loading") {
     bodyHtml = `
       <div class="remote-state-card">
-        <h3>Live Search Skills.sh</h3>
-        <p>Enter at least 2 characters above to search live skills from the Skills.sh directory (up to 24 results per query).</p>
-        <a class="glass-btn" href="${openSkillsShUrl}" target="_blank" rel="noopener">Open Skills.sh ↗</a>
-      </div>`;
-  } else if (state.remote.status === "loading") {
-    bodyHtml = `
-      <div class="remote-state-card">
-        <h3>Searching Skills.sh…</h3>
-        <p>Fetching live results for "${escapeHtml(q)}".</p>
+        <h3>Loading All Skills…</h3>
+        <p>Querying imported Skills.sh catalog${q ? ` for "${escapeHtml(q)}"` : ""} (page ${state.remote.page}).</p>
       </div>`;
   } else if (state.remote.status === "unavailable") {
     bodyHtml = `
       <div class="remote-state-card">
-        <h3>Skills.sh Live Search Unavailable</h3>
-        <p>${escapeHtml(state.remote.error || "Live search requires the Vercel OIDC API route and is unavailable on static hosting.")}</p>
+        <h3>All Skills Catalog API Unavailable</h3>
+        <p>${escapeHtml(state.remote.error || "Server-side search & pagination require the Vercel API + database (unavailable on static hosting).")}</p>
+        <a class="glass-btn primary" href="${openSkillsShUrl}" target="_blank" rel="noopener">Open Skills.sh ↗</a>
+      </div>`;
+  } else if (state.remote.importedCount === 0) {
+    bodyHtml = `
+      <div class="remote-state-card">
+        <h3>0 Unique Skills.sh Listings Imported</h3>
+        <p>The local catalog database is initialized with <strong>0</strong> imported listings (Phase 1 target: 566,000). Live ingestion from <code>https://skills.sh/api/v1/</code> requires an authenticated <code>VERCEL_OIDC_TOKEN</code> and repository-specific API / authorized bulk export access.</p>
         <a class="glass-btn primary" href="${openSkillsShUrl}" target="_blank" rel="noopener">Open Skills.sh ↗</a>
       </div>`;
   } else if (state.remote.status === "empty" || !state.remote.results.length) {
     bodyHtml = `
       <div class="remote-state-card">
-        <h3>No matching skills found on Skills.sh</h3>
-        <p>No live results matched "${escapeHtml(q)}". Try another keyword or browse Skills.sh directly.</p>
+        <h3>No matching listings in All Skills</h3>
+        <p>No imported Skills.sh listings matched "${escapeHtml(q)}".</p>
         <a class="glass-btn" href="${openSkillsShUrl}" target="_blank" rel="noopener">Open Skills.sh ↗</a>
       </div>`;
   } else {
+    const startRank = (state.remote.page - 1) * 24 + 1;
     bodyHtml = state.remote.results
       .map((item, idx) => {
-        const installsLabel =
-          typeof item.installs === "number"
-            ? `${item.installs.toLocaleString()} installs`
-            : "Live result";
+        const publisher = item.publisher || (item.source?.includes("/") ? item.source.split("/")[0] : item.source) || "unknown";
         const installCmd =
           item.isValidGitHubSource && item.slug
             ? `npx skills add ${item.source} --skill ${item.slug}`
@@ -190,35 +191,47 @@ function renderSkillsShDirectory() {
 
         return `
         <div class="skill-row" style="cursor:default">
-          <div class="row-rank">#${idx + 1}</div>
+          <div class="row-rank">#${startRank + idx}</div>
           <div class="row-title-wrap">
             <div class="row-name">${escapeHtml(item.name)}</div>
             <div class="row-path">
-              <span class="cat-badge">${escapeHtml(item.source)}</span>
-              <span class="row-lines">${escapeHtml(installsLabel)}</span>
+              <span class="cat-badge">${escapeHtml(publisher)}</span>
+              <span class="row-lines">${escapeHtml(item.source)}</span>
             </div>
           </div>
-          <div class="row-desc">${escapeHtml(item.description || `Source repository: ${item.source}`)}</div>
+          <div class="row-desc">${escapeHtml(item.description || `Source: ${item.source}`)}</div>
           <div class="row-actions">
             ${
               installCmd
                 ? `<button class="row-btn primary copy-remote-cmd-btn" data-cmd="${escapeHtml(installCmd)}">Copy Install Command</button>`
                 : ""
             }
-            <a class="row-btn" href="${escapeHtml(item.url)}" target="_blank" rel="noopener">View Skill ↗</a>
+            <a class="row-btn" href="${escapeHtml(item.url)}" target="_blank" rel="noopener">Open Original ↗</a>
           </div>
         </div>`;
       })
       .join("");
+
+    paginationHtml = `
+      <div class="pagination-bar">
+        <span class="pagination-info">
+          Showing page ${state.remote.page} of ${state.remote.totalPages} (${state.remote.total.toLocaleString()} matching • ${state.remote.importedCount.toLocaleString()} imported)
+        </span>
+        <div style="display:flex;gap:8px">
+          <button class="row-btn" id="prevPageBtn" ${state.remote.page <= 1 ? "disabled" : ""}>← Previous</button>
+          <button class="row-btn" id="nextPageBtn" ${state.remote.page >= state.remote.totalPages ? "disabled" : ""}>Next →</button>
+        </div>
+      </div>`;
   }
 
   els.viewContent.innerHTML = `
     <div class="directory-panel">
       <div class="directory-header">
-        <span>Skills.sh Live Search${totalText} (${state.remote.results.length})</span>
-        <span>Up to 24 live results per query</span>
+        <span>All Skills — Skills.sh Imported (${state.remote.importedCount.toLocaleString()} / 566,000 target)</span>
+        <span>Server-side search &amp; pagination</span>
       </div>
       ${bodyHtml}
+      ${paginationHtml}
     </div>
   `;
 
@@ -227,9 +240,22 @@ function renderSkillsShDirectory() {
       copyText(btn.dataset.cmd, "Copied npx install command");
     });
   });
+
+  document.getElementById("prevPageBtn")?.addEventListener("click", () => {
+    if (state.remote.page > 1) {
+      state.remote.page -= 1;
+      fetchAllSkillsPage(true);
+    }
+  });
+  document.getElementById("nextPageBtn")?.addEventListener("click", () => {
+    if (state.remote.page < state.remote.totalPages) {
+      state.remote.page += 1;
+      fetchAllSkillsPage(true);
+    }
+  });
 }
 
-function triggerSkillsShSearch(immediate = false) {
+function fetchAllSkillsPage(immediate = false) {
   clearTimeout(remoteDebounceTimer);
   if (remoteAbortController) {
     remoteAbortController.abort();
@@ -237,58 +263,45 @@ function triggerSkillsShSearch(immediate = false) {
   }
 
   const q = state.searchQuery.trim();
-  if (q.length < 2) {
-    state.remote.status = "idle";
-    state.remote.results = [];
-    state.remote.total = null;
-    state.remote.error = "";
-    state.remote.lastQuery = q;
-    if (state.tab === "directory" && state.searchMode === "skills_sh") render();
-    return;
-  }
-
   state.remote.status = "loading";
   state.remote.error = "";
-  if (state.tab === "directory" && state.searchMode === "skills_sh") render();
+  if (state.tab === "directory" && state.searchMode === "all_skills") render();
 
   const runFetch = async () => {
     const controller = new AbortController();
     remoteAbortController = controller;
     try {
       const res = await fetch(
-        `/api/skills-search?q=${encodeURIComponent(q)}&limit=24`,
+        `/api/all-skills?q=${encodeURIComponent(q)}&page=${state.remote.page}&limit=24`,
         { signal: controller.signal }
       );
       if (!res.ok) {
-        let errMsg = "Skills.sh live search is unavailable right now.";
+        let errMsg = "All Skills catalog API is unavailable on this host.";
         try {
           const errJson = await res.json();
           if (errJson?.error) errMsg = errJson.error;
         } catch {
-          // Non-JSON error response (e.g. 404/501 on static hosting)
+          // Static hosting 404/501
         }
         state.remote.status = "unavailable";
         state.remote.results = [];
-        state.remote.total = null;
         state.remote.error = errMsg;
       } else {
         const data = await res.json();
-        const items = Array.isArray(data?.skills) ? data.skills.slice(0, 24) : [];
-        state.remote.results = items;
-        state.remote.total =
-          typeof data?.total === "number" && Number.isFinite(data.total) ? data.total : null;
-        state.remote.status = items.length ? "ready" : "empty";
+        state.remote.importedCount = typeof data?.importedCount === "number" ? data.importedCount : 0;
+        state.remote.total = typeof data?.total === "number" ? data.total : 0;
+        state.remote.totalPages = typeof data?.totalPages === "number" ? data.totalPages : 1;
+        state.remote.results = Array.isArray(data?.skills) ? data.skills : [];
+        state.remote.status = state.remote.results.length ? "ready" : "empty";
         state.remote.error = "";
       }
-      state.remote.lastQuery = q;
-      if (state.tab === "directory" && state.searchMode === "skills_sh") render();
+      if (state.tab === "directory" && state.searchMode === "all_skills") render();
     } catch (err) {
       if (err?.name === "AbortError") return;
       state.remote.status = "unavailable";
       state.remote.results = [];
-      state.remote.total = null;
-      state.remote.error = "Unable to reach the Skills.sh search API from this host.";
-      if (state.tab === "directory" && state.searchMode === "skills_sh") render();
+      state.remote.error = "Unable to reach /api/all-skills from this host.";
+      if (state.tab === "directory" && state.searchMode === "all_skills") render();
     } finally {
       if (remoteAbortController === controller) {
         remoteAbortController = null;
@@ -301,8 +314,8 @@ function triggerSkillsShSearch(immediate = false) {
 }
 
 function renderDirectory() {
-  if (state.searchMode === "skills_sh") {
-    renderSkillsShDirectory();
+  if (state.searchMode === "all_skills") {
+    renderAllSkillsDirectory();
     return;
   }
 
@@ -891,8 +904,8 @@ function render() {
     btn.setAttribute("aria-selected", active ? "true" : "false");
   });
   els.searchInput.placeholder =
-    state.searchMode === "skills_sh"
-      ? "Search Skills.sh live (min 2 chars, e.g. react, figma, playwright)..."
+    state.searchMode === "all_skills"
+      ? "Search All Skills imported from Skills.sh (server-side)..."
       : "Search My Collection (e.g. figma, playwright, pdf, code-reviewer)...";
 
   els.heroSection.style.display = state.tab === "directory" ? "block" : "none";
@@ -937,8 +950,9 @@ async function init() {
         clearTimeout(remoteDebounceTimer);
         remoteAbortController.abort();
         remoteAbortController = null;
-      } else if (nextMode === "skills_sh") {
-        triggerSkillsShSearch(true);
+      } else if (nextMode === "all_skills") {
+        state.remote.page = 1;
+        fetchAllSkillsPage(true);
         return;
       }
       render();
@@ -962,8 +976,9 @@ async function init() {
   els.searchInput.addEventListener("input", (e) => {
     state.searchQuery = e.target.value;
     state.tab = "directory";
-    if (state.searchMode === "skills_sh") {
-      triggerSkillsShSearch(false);
+    if (state.searchMode === "all_skills") {
+      state.remote.page = 1;
+      fetchAllSkillsPage(false);
     } else {
       render();
     }
