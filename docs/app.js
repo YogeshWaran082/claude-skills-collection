@@ -328,6 +328,23 @@ async function init() {
 
   document.getElementById("themeToggleBtn").addEventListener("click", toggleTheme);
 
+  document.querySelectorAll("[data-footer-tab]").forEach((btn) => {
+    btn.addEventListener("click", () => {
+      state.tab = btn.dataset.footerTab;
+      render();
+      window.scrollTo({ top: 0, behavior: "smooth" });
+    });
+  });
+
+  document.getElementById("footerNotifyForm").addEventListener("submit", (e) => {
+    e.preventDefault();
+    const input = document.getElementById("footerEmailInput");
+    if (input.value.trim()) {
+      showToast(`Subscribed ${input.value.trim()} for Skill Lab 2.0 updates`);
+      input.value = "";
+    }
+  });
+
   document.getElementById("modalCloseBtn").addEventListener("click", closeSkillModal);
   els.modalBackdrop.addEventListener("click", (e) => {
     if (e.target === els.modalBackdrop) closeSkillModal();
