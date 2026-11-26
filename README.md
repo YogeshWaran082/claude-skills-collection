@@ -6,38 +6,48 @@ See [`COMMUNITY_RESOURCES.md`](./COMMUNITY_RESOURCES.md) for upstream community 
 
 ---
 
-## How to Use These Skills (Setup Guide)
+## How to Use These Skills (Setup & Install Guide)
 
-### 1. Clone the Repository
+### 1. Quick Terminal Install (All 90 Skills or One Category)
+Clone the repo and run [`install.sh`](./install.sh) to install **all skills** (or a single category folder) into your terminal agent:
 ```bash
 git clone https://github.com/YogeshWaran082/claude-skills-collection.git
+cd claude-skills-collection
+chmod +x install.sh
+
+# Install ALL 90 skills:
+./install.sh claude        # Claude Code (global: ~/.claude/skills/)
+./install.sh claude-local  # Claude Code (current project: ./.claude/skills/)
+./install.sh gemini        # Antigravity / Gemini (~/.gemini/antigravity/skills/)
+./install.sh codex         # OpenAI Codex CLI (~/.codex/skills/)
+./install.sh cursor        # Cursor rules (./.cursor/rules/*.mdc)
+
+# Or install ONE category folder only:
+./install.sh claude designing
+./install.sh gemini engineering
 ```
 
-### 2. Use in Claude Code (CLI)
-Copy any skill into your global or project `.claude/skills/` directory as `SKILL.md`:
-```bash
-# Global (available in all projects)
-mkdir -p ~/.claude/skills/code-reviewer
-cp engineering/code-reviewer-SKILL.md ~/.claude/skills/code-reviewer/SKILL.md
+### 2. Terminal Agents (Manual Single-Skill Install)
+- **Claude Code CLI:** Copy any `*-SKILL.md` to `~/.claude/skills/<skill-name>/SKILL.md` (global) or `.claude/skills/<skill-name>/SKILL.md` (project).
+- **Antigravity / Gemini CLI:** Copy to `~/.gemini/antigravity/skills/<skill-name>/SKILL.md` (or `.gemini/skills/<skill-name>/SKILL.md`).
+- **OpenAI Codex CLI:** Copy to `~/.codex/skills/<skill-name>/SKILL.md`.
+- **Cursor / Windsurf / Cline:** Copy to `.cursor/rules/<skill-name>.mdc`, or reference any skill directly in chat (`@engineering/code-reviewer-SKILL.md`).
 
-# Project-only (inside your repo)
-mkdir -p .claude/skills/frontend-ui-designer
-cp designing/frontend-ui-designer-SKILL.md .claude/skills/frontend-ui-designer/SKILL.md
-```
+### 3. Chat Apps (Web & Desktop)
+- **Claude.ai:** Open **Projects → Project Knowledge** (or **Settings → Capabilities → Skills**), upload any `*-SKILL.md` file(s), and invoke by name in chat.
+- **ChatGPT:** Open **Custom GPTs** (or **ChatGPT Projects**), paste the skill into **Instructions** or upload `*-SKILL.md` files to **Knowledge**.
+- **Google Gemini (Gems):** Open **Gem Manager → New Gem**, paste the skill into **Instructions** or attach `*-SKILL.md` as Knowledge.
+- **Perplexity Spaces / Poe:** Add the skill text to **Space Instructions** or your custom bot's system prompt.
 
-### 3. Use in Claude.ai (Web / Desktop)
-1. Open **Claude.ai** → **Projects** (or **Settings → Capabilities → Skills**).
-2. Upload the desired `*-SKILL.md` file (or paste its contents into Project Instructions).
-3. Ask Claude naturally (e.g., *"Review this UI with `design-critique-auditor`"*, *"Write a PRD using `prd-spec-writer`"*).
-
-### 4. Use in Antigravity / Cursor / Other Agents
-- Copy `*-SKILL.md` into your workspace's skills folder (e.g., `.gemini/skills/<name>/SKILL.md` or `.cursor/rules/`), or reference the file directly in chat (`@engineering/code-reviewer-SKILL.md`).
-
-### 5. Recommended Connectors & Tools
-- **Figma MCP:** Connect Figma in Claude.ai Connectors or your MCP config, then use [`figma-mcp-connector-SKILL.md`](./integrations/figma-mcp-connector-SKILL.md).
-- **GitHub & Git:** Authenticate [`gh` CLI](https://cli.github.com/) (`gh auth login`) for [`github-workflow-SKILL.md`](./integrations/github-workflow-SKILL.md) and [`commit-commands-SKILL.md`](./devops-and-docs/commit-commands-SKILL.md).
-- **Browser Testing:** Install Playwright (`npm i -D @playwright/test`) for [`playwright-automation-SKILL.md`](./engineering/playwright-automation-SKILL.md).
-- **Adding New Skills:** Follow [`skill-creator-SKILL.md`](./prompting-and-workflow/skill-creator-SKILL.md) and keep project context updated with [`claude-md-management-SKILL.md`](./prompting-and-workflow/claude-md-management-SKILL.md).
+### 4. Prerequisites & Tools by Category
+| Category | Recommended CLI / Tools / Connectors |
+| :--- | :--- |
+| **`integrations/`** | **Figma MCP** (`figma-mcp-connector`), **GitHub CLI** (`gh auth login`), Slack / Jira / Confluence / Google Calendar / Stripe MCP or API tokens |
+| **`engineering/`** | **Playwright** (`npm i -D @playwright/test`), **Chrome DevTools**, **Node.js / Python**, **MCP SDK** (`@modelcontextprotocol/sdk` or `mcp`) |
+| **`devops-and-docs/`** | **Git** & **GitHub CLI** (`gh`), **Docker**, **GitHub Actions** |
+| **`documents-and-office/`** | Python packages: `pip install python-docx pdfplumber pypdf python-pptx openpyxl` |
+| **`video-and-motion/`** | `ffmpeg`, Python `pillow` (for `slack-gif-creator` and video workflows) |
+| **`prompting-and-workflow/`** | Use [`skill-creator-SKILL.md`](./prompting-and-workflow/skill-creator-SKILL.md) to author new skills and [`claude-md-management-SKILL.md`](./prompting-and-workflow/claude-md-management-SKILL.md) for `CLAUDE.md` |
 
 ---
 
