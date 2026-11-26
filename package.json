@@ -1,0 +1,19 @@
+{
+  "name": "claude-skills-pack-all",
+  "version": "1.0.0",
+  "type": "module",
+  "description": "A curated, folder-organized collection of **90 Claude Skills** (`*-SKILL.md`) covering design, research, video production, engineering, app integrations, DevOps, product & marketing, office documents, data & finance, sales & support, HR & legal, and operations.",
+  "main": "index.js",
+  "directories": {
+    "doc": "docs"
+  },
+  "scripts": {
+    "test": "echo \"Error: no test specified\" && exit 1"
+  },
+  "keywords": [],
+  "author": "",
+  "license": "ISC",
+  "dependencies": {
+    "sql.js": "^1.17.0"
+  }
+}

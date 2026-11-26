@@ -1,4 +1,9 @@
 {
   "$schema": "https://openapi.vercel.sh/vercel.json",
-  "outputDirectory": "docs"
+  "outputDirectory": "docs",
+  "functions": {
+    "api/all-skills.js": {
+      "includeFiles": "data/skills_catalog.db"
+    }
+  }
 }

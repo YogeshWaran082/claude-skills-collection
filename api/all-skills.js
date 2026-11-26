@@ -1,57 +1,75 @@
 /**
  * Vercel Serverless Function: GET /api/all-skills
- * Server-side search and pagination over imported Skills.sh listings in data/skills_catalog.db.
- * Falls back to live Skills.sh v1 API if OIDC token is present and local DB has 0 imported rows.
+ * Pure Node.js (sql.js) server-side search and pagination over data/skills_catalog.db.
  */
 
-import { execFile } from "node:child_process";
 import fs from "node:fs";
 import path from "node:path";
-import { promisify } from "node:util";
+import initSqlJs from "sql.js";
 
-const execFileAsync = promisify(execFile);
 const DB_PATH = path.join(process.cwd(), "data", "skills_catalog.db");
 const GITHUB_SOURCE_RE = /^[A-Za-z0-9_.-]+\/[A-Za-z0-9_.-]+$/;
 const TARGET_COUNT = 566000;
+
+let sqlPromise = null;
+function getSql() {
+  if (!sqlPromise) {
+    sqlPromise = initSqlJs();
+  }
+  return sqlPromise;
+}
 
 async function querySqlite(q, page, limit) {
   if (!fs.existsSync(DB_PATH)) {
     return { importedCount: 0, total: 0, skills: [] };
   }
 
-  const pyScript = `
-import json, sqlite3, sys
-db_path, q, page, limit = sys.argv[1], sys.argv[2], int(sys.argv[3]), int(sys.argv[4])
-conn = sqlite3.connect(db_path)
-conn.row_factory = sqlite3.Row
-imported_count = conn.execute("SELECT COUNT(*) FROM skills").fetchone()[0]
-offset = (page - 1) * limit
-if q:
-    like = f"%{q}%"
-    where = "WHERE name LIKE ? OR publisher LIKE ? OR source LIKE ? OR description LIKE ?"
-    params = (like, like, like, like)
-    total = conn.execute(f"SELECT COUNT(*) FROM skills {where}", params).fetchone()[0]
-    rows = conn.execute(
-        f"SELECT source, slug, name, publisher, description, installs, url FROM skills {where} ORDER BY COALESCE(installs, 0) DESC, name ASC LIMIT ? OFFSET ?",
-        (*params, limit, offset),
-    ).fetchall()
-else:
-    total = imported_count
-    rows = conn.execute(
-        "SELECT source, slug, name, publisher, description, installs, url FROM skills ORDER BY COALESCE(installs, 0) DESC, name ASC LIMIT ? OFFSET ?",
-        (limit, offset),
-    ).fetchall()
-print(json.dumps({
-    "importedCount": imported_count,
-    "total": total,
-    "skills": [dict(r) for r in rows],
-}))
-`;
+  const SQL = await getSql();
+  const fileBuffer = fs.readFileSync(DB_PATH);
+  const db = new SQL.Database(fileBuffer);
 
-  const { stdout } = await execFileAsync("python3", ["-c", pyScript, DB_PATH, q, String(page), String(limit)], {
-    timeout: 5000,
-  });
-  return JSON.parse(stdout);
+  try {
+    const countRes = db.exec("SELECT COUNT(*) FROM skills");
+    const importedCount = countRes[0]?.values?.[0]?.[0] ?? 0;
+    const offset = (page - 1) * limit;
+
+    let total = importedCount;
+    let rows = [];
+
+    if (q) {
+      const like = `%${q}%`;
+      const totalStmt = db.prepare(
+        "SELECT COUNT(*) AS cnt FROM skills WHERE name LIKE ? OR publisher LIKE ? OR source LIKE ? OR description LIKE ?"
+      );
+      totalStmt.bind([like, like, like, like]);
+      if (totalStmt.step()) {
+        total = totalStmt.getAsObject().cnt ?? 0;
+      }
+      totalStmt.free();
+
+      const stmt = db.prepare(
+        "SELECT source, slug, name, publisher, description, installs, url FROM skills WHERE name LIKE ? OR publisher LIKE ? OR source LIKE ? OR description LIKE ? ORDER BY COALESCE(installs, 0) DESC, name ASC LIMIT ? OFFSET ?"
+      );
+      stmt.bind([like, like, like, like, limit, offset]);
+      while (stmt.step()) {
+        rows.push(stmt.getAsObject());
+      }
+      stmt.free();
+    } else {
+      const stmt = db.prepare(
+        "SELECT source, slug, name, publisher, description, installs, url FROM skills ORDER BY COALESCE(installs, 0) DESC, name ASC LIMIT ? OFFSET ?"
+      );
+      stmt.bind([limit, offset]);
+      while (stmt.step()) {
+        rows.push(stmt.getAsObject());
+      }
+      stmt.free();
+    }
+
+    return { importedCount, total, skills: rows };
+  } finally {
+    db.close();
+  }
 }
 
 export default async function handler(req, res) {
@@ -89,7 +107,7 @@ export default async function handler(req, res) {
       targetCount: TARGET_COUNT,
       skills,
     });
-  } catch {
+  } catch (err) {
     return res.status(503).json({
       error: "Catalog database is unavailable on this host.",
       importedCount: 0,
