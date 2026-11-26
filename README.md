@@ -1,6 +1,8 @@
 # Claude Skills Collection
 
-A curated, folder-organized collection of **65 Claude Skills** (`*-SKILL.md`) covering design, research, video production, engineering, DevOps, product & marketing, office documents, data & finance, sales & support, HR & legal, and operations.
+A curated, folder-organized collection of **80 Claude Skills** (`*-SKILL.md`) covering design, research, video production, engineering, app integrations, DevOps, product & marketing, office documents, data & finance, sales & support, HR & legal, and operations.
+
+See [`COMMUNITY_RESOURCES.md`](./COMMUNITY_RESOURCES.md) for upstream community repositories and plugin directories.
 
 ## Folder Structure
 
@@ -9,14 +11,15 @@ A curated, folder-organized collection of **65 Claude Skills** (`*-SKILL.md`) co
 | [`designing/`](./designing) | UI/UX design, design systems, branding, Figma-to-code, landing pages | 17 |
 | [`ux-research-and-copy/`](./ux-research-and-copy) | User research, market research, synthesis, UX & long-form copy | 5 |
 | [`video-and-motion/`](./video-and-motion) | Video direction, animatics, beat boards, AI video prompting | 8 |
-| [`engineering/`](./engineering) | Backend architecture, code review, TDD, debugging, API & SQL | 6 |
-| [`devops-and-docs/`](./devops-and-docs) | Git/PRs, CI/CD, GitHub Actions, technical documentation | 4 |
-| [`product-and-growth/`](./product-and-growth) | PRDs, specs, PM, campaigns, local SEO, social & conversion copy | 8 |
+| [`engineering/`](./engineering) | Backend, frontend, security, MCP, testing, code review, API & SQL | 10 |
+| [`integrations/`](./integrations) | Slack, Jira, Confluence, Google Calendar, Stripe integrations | 5 |
+| [`devops-and-docs/`](./devops-and-docs) | Git/PRs, CI/CD, incident response, changelogs, technical docs | 6 |
+| [`product-and-growth/`](./product-and-growth) | PRDs, specs, PM, Scrum, campaigns, local SEO, social & copy | 9 |
 | [`documents-and-office/`](./documents-and-office) | Word (`.docx`), PDF, PowerPoint (`.pptx`), Excel (`.xlsx`) | 4 |
-| [`data-and-finance/`](./data-and-finance) | Dashboards, variance analysis, pricing strategy | 3 |
-| [`sales-and-support/`](./sales-and-support) | Client proposals, SOWs, customer support responses | 2 |
+| [`data-and-finance/`](./data-and-finance) | Dashboards, variance analysis, pricing strategy, invoices | 4 |
+| [`sales-and-support/`](./sales-and-support) | Client proposals, SOWs, lead research, support responses | 3 |
 | [`hr-and-legal/`](./hr-and-legal) | Onboarding plans, contract & NDA review | 2 |
-| [`operations-and-productivity/`](./operations-and-productivity) | SOPs, task breakdown, meeting insights analysis | 3 |
+| [`operations-and-productivity/`](./operations-and-productivity) | SOPs, internal comms, task breakdown, meeting insights | 4 |
 | [`prompting-and-workflow/`](./prompting-and-workflow) | Skill authoring, prompt engineering, response style | 3 |
 
 ---
@@ -63,20 +66,34 @@ A curated, folder-organized collection of **65 Claude Skills** (`*-SKILL.md`) co
 - [`api-architect-SKILL.md`](./engineering/api-architect-SKILL.md) — REST/GraphQL API design & OpenAPI specs
 - [`code-reviewer-SKILL.md`](./engineering/code-reviewer-SKILL.md) — PR & diff review for bugs, security, and maintainability
 - [`debugger-root-cause-SKILL.md`](./engineering/debugger-root-cause-SKILL.md) — Systematic bug triage & root-cause analysis
+- [`mcp-builder-SKILL.md`](./engineering/mcp-builder-SKILL.md) — Build Model Context Protocol (MCP) servers
 - [`senior-backend-SKILL.md`](./engineering/senior-backend-SKILL.md) — Production backend architecture, resilience & observability
+- [`senior-frontend-SKILL.md`](./engineering/senior-frontend-SKILL.md) — Senior frontend architecture & performance
+- [`senior-security-SKILL.md`](./engineering/senior-security-SKILL.md) — Application security & threat modeling
 - [`sql-query-optimizer-SKILL.md`](./engineering/sql-query-optimizer-SKILL.md) — SQL tuning, indexing & zero-downtime migrations
 - [`tdd-test-generator-SKILL.md`](./engineering/tdd-test-generator-SKILL.md) — Unit, integration, and edge-case tests (TDD)
+- [`webapp-testing-SKILL.md`](./engineering/webapp-testing-SKILL.md) — Automated web app testing & Playwright workflows
+
+### `integrations/`
+- [`confluence-expert-SKILL.md`](./integrations/confluence-expert-SKILL.md) — Confluence spaces, pages & documentation workflows
+- [`googlecalendar-automation-SKILL.md`](./integrations/googlecalendar-automation-SKILL.md) — Google Calendar event & scheduling automation
+- [`jira-expert-SKILL.md`](./integrations/jira-expert-SKILL.md) — Jira workflows, JQL, sprints & issue automation
+- [`slackbot-automation-SKILL.md`](./integrations/slackbot-automation-SKILL.md) — Slack bot & workspace automation
+- [`stripe-integration-expert-SKILL.md`](./integrations/stripe-integration-expert-SKILL.md) — Stripe payments, subscriptions & webhooks
 
 ### `devops-and-docs/`
+- [`changelog-generator-SKILL.md`](./devops-and-docs/changelog-generator-SKILL.md) — Automated release changelogs from commits
 - [`ci-cd-github-actions-SKILL.md`](./devops-and-docs/ci-cd-github-actions-SKILL.md) — GitHub Actions pipelines & Dockerfiles
 - [`documentation-SKILL.md`](./devops-and-docs/documentation-SKILL.md) — Technical & user guides, references, and runbooks
 - [`git-pr-writer-SKILL.md`](./devops-and-docs/git-pr-writer-SKILL.md) — Conventional Commits & PR descriptions
+- [`incident-response-SKILL.md`](./devops-and-docs/incident-response-SKILL.md) — Production incident triage, comms & postmortems
 - [`tech-docs-writer-SKILL.md`](./devops-and-docs/tech-docs-writer-SKILL.md) — READMEs, architecture docs & Mermaid diagrams
 
 ### `product-and-growth/`
 - [`campaign-plan-SKILL.md`](./product-and-growth/campaign-plan-SKILL.md) — Multi-channel marketing campaign planning
 - [`local-seo-manager-SKILL.md`](./product-and-growth/local-seo-manager-SKILL.md) — Google Business Profile, local keywords & NAP audits
 - [`prd-spec-writer-SKILL.md`](./product-and-growth/prd-spec-writer-SKILL.md) — PRDs, user stories & acceptance criteria
+- [`scrum-master-SKILL.md`](./product-and-growth/scrum-master-SKILL.md) — Agile ceremonies, sprint health & velocity
 - [`senior-pm-SKILL.md`](./product-and-growth/senior-pm-SKILL.md) — Roadmap prioritization, risk & stakeholder alignment
 - [`seo-conversion-copy-SKILL.md`](./product-and-growth/seo-conversion-copy-SKILL.md) — Landing page conversion copy & SEO metadata
 - [`social-content-SKILL.md`](./product-and-growth/social-content-SKILL.md) — Platform-native social posts & hooks
@@ -91,11 +108,13 @@ A curated, folder-organized collection of **65 Claude Skills** (`*-SKILL.md`) co
 
 ### `data-and-finance/`
 - [`build-dashboard-SKILL.md`](./data-and-finance/build-dashboard-SKILL.md) — KPI & analytics dashboard design
+- [`invoice-organizer-SKILL.md`](./data-and-finance/invoice-organizer-SKILL.md) — Invoice parsing, categorization & organization
 - [`pricing-strategist-SKILL.md`](./data-and-finance/pricing-strategist-SKILL.md) — SaaS/product pricing tiers & unit economics
 - [`variance-analysis-SKILL.md`](./data-and-finance/variance-analysis-SKILL.md) — Budget vs. actuals & driver decomposition
 
 ### `sales-and-support/`
 - [`draft-response-SKILL.md`](./sales-and-support/draft-response-SKILL.md) — Empathetic, clear customer & client replies
+- [`lead-research-assistant-SKILL.md`](./sales-and-support/lead-research-assistant-SKILL.md) — Prospect & account research for outbound
 - [`proposal-builder-SKILL.md`](./sales-and-support/proposal-builder-SKILL.md) — Client proposals & Statements of Work (SOWs)
 
 ### `hr-and-legal/`
@@ -103,6 +122,7 @@ A curated, folder-organized collection of **65 Claude Skills** (`*-SKILL.md`) co
 - [`review-contract-SKILL.md`](./hr-and-legal/review-contract-SKILL.md) — Contract, MSA & NDA risk triage
 
 ### `operations-and-productivity/`
+- [`internal-comms-SKILL.md`](./operations-and-productivity/internal-comms-SKILL.md) — Team announcements, memos & status updates
 - [`meeting-insights-analyzer-SKILL.md`](./operations-and-productivity/meeting-insights-analyzer-SKILL.md) — Decisions, action items & insights from transcripts
 - [`process-doc-SKILL.md`](./operations-and-productivity/process-doc-SKILL.md) — Standard Operating Procedures (SOPs)
 - [`task-management-SKILL.md`](./operations-and-productivity/task-management-SKILL.md) — Task breakdown, prioritization & next actions
