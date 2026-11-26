@@ -390,7 +390,7 @@ function renderNpmPage() {
               <span class="cat-badge">${escapeHtml(s.category)}</span>
             </div>
           </div>
-          <div class="cmd-output-row" style="margin-top:0;padding:8px 12px">
+          <div class="cmd-output-row npm-cmd-cell">
             <code>${escapeHtml(cmd)}</code>
           </div>
           <div class="row-actions">

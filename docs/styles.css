@@ -475,6 +475,18 @@ body {
   white-space: nowrap;
 }
 
+.npm-cmd-cell {
+  min-width: 0;
+  width: 100%;
+  margin-top: 0;
+  padding: 8px 12px;
+}
+
+.npm-cmd-cell code {
+  display: block;
+  width: 100%;
+}
+
 /* Directory / Leaderboard Table (skills.sh structure + frosted glass) */
 .directory-panel {
   background: var(--glass-surface);
