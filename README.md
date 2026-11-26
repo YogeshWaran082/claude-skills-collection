@@ -4,6 +4,43 @@ A curated, folder-organized collection of **90 Claude Skills** (`*-SKILL.md`) co
 
 See [`COMMUNITY_RESOURCES.md`](./COMMUNITY_RESOURCES.md) for upstream community repositories and plugin directories.
 
+---
+
+## How to Use These Skills (Setup Guide)
+
+### 1. Clone the Repository
+```bash
+git clone https://github.com/YogeshWaran082/claude-skills-collection.git
+```
+
+### 2. Use in Claude Code (CLI)
+Copy any skill into your global or project `.claude/skills/` directory as `SKILL.md`:
+```bash
+# Global (available in all projects)
+mkdir -p ~/.claude/skills/code-reviewer
+cp engineering/code-reviewer-SKILL.md ~/.claude/skills/code-reviewer/SKILL.md
+
+# Project-only (inside your repo)
+mkdir -p .claude/skills/frontend-ui-designer
+cp designing/frontend-ui-designer-SKILL.md .claude/skills/frontend-ui-designer/SKILL.md
+```
+
+### 3. Use in Claude.ai (Web / Desktop)
+1. Open **Claude.ai** → **Projects** (or **Settings → Capabilities → Skills**).
+2. Upload the desired `*-SKILL.md` file (or paste its contents into Project Instructions).
+3. Ask Claude naturally (e.g., *"Review this UI with `design-critique-auditor`"*, *"Write a PRD using `prd-spec-writer`"*).
+
+### 4. Use in Antigravity / Cursor / Other Agents
+- Copy `*-SKILL.md` into your workspace's skills folder (e.g., `.gemini/skills/<name>/SKILL.md` or `.cursor/rules/`), or reference the file directly in chat (`@engineering/code-reviewer-SKILL.md`).
+
+### 5. Recommended Connectors & Tools
+- **Figma MCP:** Connect Figma in Claude.ai Connectors or your MCP config, then use [`figma-mcp-connector-SKILL.md`](./integrations/figma-mcp-connector-SKILL.md).
+- **GitHub & Git:** Authenticate [`gh` CLI](https://cli.github.com/) (`gh auth login`) for [`github-workflow-SKILL.md`](./integrations/github-workflow-SKILL.md) and [`commit-commands-SKILL.md`](./devops-and-docs/commit-commands-SKILL.md).
+- **Browser Testing:** Install Playwright (`npm i -D @playwright/test`) for [`playwright-automation-SKILL.md`](./engineering/playwright-automation-SKILL.md).
+- **Adding New Skills:** Follow [`skill-creator-SKILL.md`](./prompting-and-workflow/skill-creator-SKILL.md) and keep project context updated with [`claude-md-management-SKILL.md`](./prompting-and-workflow/claude-md-management-SKILL.md).
+
+---
+
 ## Folder Structure
 
 | Folder | Focus | Skills |
