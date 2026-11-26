@@ -995,7 +995,7 @@ html, body {
   .global-search { width: 220px; }
 }
 
-@media (max-width: 780px) {
+@media (max-width: 900px) {
   .shell { padding: 8px; gap: 8px; }
   .icon-rail { display: none; }
   .mobile-menu-btn { display: grid; }
@@ -1009,6 +1009,6 @@ html, body {
     box-shadow: var(--shadow-window);
   }
   .sidebar.collapsed { width: 0; }
-  .global-search { width: 160px; }
+  .global-search { width: 170px; }
   .theme-pill span#themeLabel { display: none; }
 }

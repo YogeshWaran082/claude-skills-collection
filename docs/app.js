@@ -440,6 +440,9 @@ function render() {
 
 async function init() {
   initTheme();
+  if (window.innerWidth <= 900) {
+    els.sidebar.classList.add("collapsed");
+  }
 
   try {
     const res = await fetch("skills.json");
