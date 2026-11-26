@@ -128,9 +128,18 @@ body {
   border-radius: 12px;
   background: var(--input-bg);
   border: 1px solid var(--border-subtle);
+  max-width: 100%;
+  overflow-x: auto;
+  scrollbar-width: none;
+}
+
+.nav-links::-webkit-scrollbar {
+  display: none;
 }
 
 .nav-tab {
+  white-space: nowrap;
+  flex-shrink: 0;
   padding: 6px 14px;
   border-radius: 9px;
   border: none;
