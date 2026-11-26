@@ -36,6 +36,13 @@ const state = {
     totalPages: 1,
     error: "",
   },
+  detail: {
+    status: "idle", // idle | loading | ready | error
+    source: "",
+    slug: "",
+    data: null,
+    error: "",
+  },
   npmBuilder: {
     agent: "claude",
     scope: "global",
@@ -111,6 +118,19 @@ function toggleSaveSkill(skillId) {
     showToast("Saved skill");
   }
   localStorage.setItem("skilllab-saved", JSON.stringify([...state.savedIds]));
+  const params = new URLSearchParams(window.location.search);
+  const sharedSkill = params.get("skill");
+  if (sharedSkill) {
+    const parts = sharedSkill.split("/");
+    if (parts.length >= 3) {
+      const source = `${parts[0]}/${parts[1]}`;
+      const slug = parts.slice(2).join("/");
+      state.searchMode = "all_skills";
+      openSkillDetailPage(source, slug, null, false);
+      return;
+    }
+  }
+
   render();
 }
 
@@ -190,7 +210,7 @@ function renderAllSkillsDirectory() {
             : "";
 
         return `
-        <div class="skill-row" style="cursor:default">
+        <div class="skill-row" data-remote-source="${escapeHtml(item.source)}" data-remote-slug="${escapeHtml(item.slug)}">
           <div class="row-rank">#${startRank + idx}</div>
           <div class="row-title-wrap">
             <div class="row-name">${escapeHtml(item.name)}</div>
@@ -234,6 +254,16 @@ function renderAllSkillsDirectory() {
       ${paginationHtml}
     </div>
   `;
+
+  els.viewContent.querySelectorAll(".skill-row[data-remote-source]").forEach((row) => {
+    row.addEventListener("click", (e) => {
+      if (e.target.closest("button, a")) return;
+      const src = row.dataset.remoteSource;
+      const slug = row.dataset.remoteSlug;
+      const item = state.remote.results.find((r) => r.source === src && r.slug === slug);
+      openSkillDetailPage(src, slug, item);
+    });
+  });
 
   els.viewContent.querySelectorAll(".copy-remote-cmd-btn").forEach((btn) => {
     btn.addEventListener("click", () => {
@@ -894,9 +924,268 @@ function downloadSelectedSkill() {
   showToast(`Downloaded ${a.download}`);
 }
 
+function formatBytes(bytes) {
+  if (typeof bytes !== "number" || !Number.isFinite(bytes)) return "";
+  if (bytes < 1024) return `${bytes} B`;
+  if (bytes < 1024 * 1024) return `${(bytes / 1024).toFixed(1)} KB`;
+  return `${(bytes / (1024 * 1024)).toFixed(2)} MB`;
+}
+
+/**
+ * Sanitized Markdown renderer for untrusted upstream SKILL.md files.
+ * Escapes all HTML first and only permits http:// and https:// links.
+ */
+function renderSanitizedMarkdown(rawMd) {
+  let text = String(rawMd || "").replace(/\r\n/g, "\n");
+  text = text.replace(/^---\s*\n[\s\S]*?\n---\s*\n?/, "");
+
+  const codeBlocks = [];
+  text = text.replace(/```([a-zA-Z0-9_-]*)\n([\s\S]*?)```/g, (_, lang, code) => {
+    const idx = codeBlocks.length;
+    codeBlocks.push(`<pre><code>${escapeHtml(code.trimEnd())}</code></pre>`);
+    return `@@CODEBLOCK_${idx}@@`;
+  });
+
+  const renderInline = (line) => {
+    let out = escapeHtml(line);
+    out = out.replace(/`([^`]+)`/g, (_, c) => `<code>${c}</code>`);
+    out = out.replace(/\*\*([^*]+)\*\*/g, "<strong>$1</strong>");
+    out = out.replace(/\[([^\]]+)\]\((https?:\/\/[^\s)]+)\)/g, (_, label, url) => {
+      return `<a href="${url}" target="_blank" rel="noopener noreferrer">${label}</a>`;
+    });
+    return out;
+  };
+
+  const lines = text.split("\n");
+  const html = [];
+  let inList = false;
+
+  for (const line of lines) {
+    const trimmed = line.trim();
+    const cbMatch = trimmed.match(/^@@CODEBLOCK_(\d+)@@$/);
+    if (cbMatch) {
+      if (inList) {
+        html.push("</ul>");
+        inList = false;
+      }
+      html.push(codeBlocks[Number(cbMatch[1])]);
+      continue;
+    }
+    if (!trimmed) {
+      if (inList) {
+        html.push("</ul>");
+        inList = false;
+      }
+      continue;
+    }
+    if (trimmed.startsWith("### ")) {
+      if (inList) { html.push("</ul>"); inList = false; }
+      html.push(`<h3>${renderInline(trimmed.slice(4))}</h3>`);
+    } else if (trimmed.startsWith("## ")) {
+      if (inList) { html.push("</ul>"); inList = false; }
+      html.push(`<h2>${renderInline(trimmed.slice(3))}</h2>`);
+    } else if (trimmed.startsWith("# ")) {
+      if (inList) { html.push("</ul>"); inList = false; }
+      html.push(`<h1>${renderInline(trimmed.slice(2))}</h1>`);
+    } else if (/^[-*]\s+/.test(trimmed)) {
+      if (!inList) {
+        html.push("<ul>");
+        inList = true;
+      }
+      html.push(`<li>${renderInline(trimmed.replace(/^[-*]\s+/, ""))}</li>`);
+    } else {
+      if (inList) { html.push("</ul>"); inList = false; }
+      html.push(`<p>${renderInline(trimmed)}</p>`);
+    }
+  }
+  if (inList) html.push("</ul>");
+  return html.join("\n");
+}
+
+async function openSkillDetailPage(source, slug, summaryItem = null, pushUrl = true) {
+  state.tab = "detail";
+  state.detail = {
+    status: "loading",
+    source,
+    slug,
+    data: summaryItem,
+    error: "",
+  };
+
+  if (pushUrl) {
+    const nextUrl = `${window.location.pathname}?skill=${encodeURIComponent(`${source}/${slug}`)}`;
+    window.history.pushState({ skill: `${source}/${slug}` }, "", nextUrl);
+  }
+  render();
+  window.scrollTo({ top: 0, behavior: "smooth" });
+
+  try {
+    const res = await fetch(
+      `/api/skill-detail?source=${encodeURIComponent(source)}&slug=${encodeURIComponent(slug)}`
+    );
+    if (!res.ok) {
+      let msg = "Unable to load skill files from the server.";
+      try {
+        const errJson = await res.json();
+        if (errJson?.error) msg = errJson.error;
+      } catch {
+        // Static hosting fallback
+      }
+      state.detail.status = "error";
+      state.detail.error = msg;
+    } else {
+      state.detail.data = await res.json();
+      state.detail.status = "ready";
+    }
+  } catch {
+    state.detail.status = "error";
+    state.detail.error = "Unable to reach /api/skill-detail on this host.";
+  }
+  if (state.tab === "detail") render();
+}
+
+function renderSkillDetailPage() {
+  const { status, source, slug, data, error } = state.detail;
+  const name = data?.name || slug;
+  const publisher = data?.publisher || (source.includes("/") ? source.split("/")[0] : source);
+  const license = data?.license || "Unknown";
+  const description = data?.description || "";
+  const originalUrl = data?.originalUrl || `https://www.skills.sh/${source}/${encodeURIComponent(slug)}`;
+  const installCmd = `npx skills add ${source} --skill ${slug}`;
+  const zipUrl = `/api/skill-zip?source=${encodeURIComponent(source)}&slug=${encodeURIComponent(slug)}`;
+  const shareUrl = `${window.location.origin}${window.location.pathname}?skill=${encodeURIComponent(`${source}/${slug}`)}`;
+
+  let contentArea = "";
+  if (status === "loading") {
+    contentArea = `
+      <div class="detail-card">
+        <div class="remote-state-card">
+          <h3>Loading original skill files…</h3>
+          <p>Fetching <code>SKILL.md</code> and supporting files for <code>${escapeHtml(source)}/${escapeHtml(slug)}</code>.</p>
+        </div>
+      </div>`;
+  } else if (status === "error") {
+    contentArea = `
+      <div class="detail-card">
+        <div class="remote-state-card">
+          <h3>Original Skill Files Unavailable</h3>
+          <p>${escapeHtml(error)}</p>
+          <a class="glass-btn primary" href="${escapeHtml(originalUrl)}" target="_blank" rel="noopener">Open Original ↗</a>
+        </div>
+      </div>`;
+  } else {
+    const files = Array.isArray(data?.files) ? data.files : [];
+    const mdHtml = renderSanitizedMarkdown(data?.skillMdContent || "");
+
+    contentArea = `
+      <div class="detail-layout">
+        <div class="detail-card">
+          <div style="display:flex;align-items:center;justify-content:space-between;gap:12px;margin-bottom:14px;padding-bottom:10px;border-bottom:1px solid var(--border-subtle)">
+            <strong style="font-size:14px">SKILL.md Preview</strong>
+            <span class="row-lines">${escapeHtml(data?.revision ? `rev: ${String(data.revision).slice(0, 7)}` : "")}</span>
+          </div>
+          <div class="md-preview">${mdHtml || "<p>No SKILL.md body content found.</p>"}</div>
+        </div>
+
+        <div class="detail-card">
+          <h3 style="font-size:15px;font-weight:600">Supporting Files (${files.length})</h3>
+          <p style="font-size:12.5px;color:var(--text-secondary);margin-top:4px">
+            Packaged under <code>${escapeHtml(slug)}/</code> in original relative paths.
+          </p>
+          <div class="files-list">
+            ${files
+              .map(
+                (f) => `
+              <div class="file-item">
+                <span>${escapeHtml(f.relativePath)}</span>
+                <span class="file-size">${formatBytes(f.size)}</span>
+              </div>`
+              )
+              .join("")}
+          </div>
+        </div>
+      </div>`;
+  }
+
+  const canZip = status === "ready" && Boolean(data?.canRedistribute);
+
+  els.viewContent.innerHTML = `
+    <div class="detail-page">
+      <div class="detail-topbar">
+        <button class="glass-btn" id="detailBackBtn">← Back to Directory</button>
+        <div style="display:flex;gap:8px;flex-wrap:wrap">
+          <button class="glass-btn" id="copyShareLinkBtn">Copy Share Link</button>
+          <a class="glass-btn" href="${escapeHtml(originalUrl)}" target="_blank" rel="noopener">Open Original ↗</a>
+        </div>
+      </div>
+
+      <div class="detail-card">
+        <div class="detail-meta-row">
+          <span class="cat-badge">${escapeHtml(publisher)}</span>
+          <span class="cat-badge">${escapeHtml(source)}</span>
+          <span class="audit-badge">License: ${escapeHtml(license)}</span>
+        </div>
+        <h1 class="detail-title">${escapeHtml(name)}</h1>
+        ${description ? `<p class="detail-desc">${escapeHtml(description)}</p>` : ""}
+
+        <div class="detail-actions-grid">
+          <div class="detail-action-box">
+            <div>
+              <div class="action-kicker">For terminal</div>
+              <div class="action-box-title">Copy Install Command</div>
+              <p class="action-box-sub"><code>${escapeHtml(installCmd)}</code></p>
+            </div>
+            <div>
+              <button class="glass-btn primary" id="detailCopyInstallBtn">Copy Install Command</button>
+            </div>
+          </div>
+
+          <div class="detail-action-box">
+            <div>
+              <div class="action-kicker">For Claude normal chat</div>
+              <div class="action-box-title">Download Skill ZIP</div>
+              <p class="action-box-sub">
+                ${
+                  canZip
+                    ? `Single-skill ZIP (${escapeHtml(slug)}/ with SKILL.md, license notice &amp; supporting files).`
+                    : "Redistribution permission is unclear or unavailable here. Use Open Original for direct file access."
+                }
+              </p>
+            </div>
+            <div>
+              ${
+                canZip
+                  ? `<a class="glass-btn primary" href="${escapeHtml(zipUrl)}" download="${escapeHtml(slug)}-skill.zip">Download Skill ZIP</a>`
+                  : `<a class="glass-btn" href="${escapeHtml(originalUrl)}" target="_blank" rel="noopener">Open Original ↗</a>`
+              }
+            </div>
+          </div>
+        </div>
+      </div>
+
+      ${contentArea}
+    </div>
+  `;
+
+  document.getElementById("detailBackBtn").addEventListener("click", () => {
+    state.tab = "directory";
+    window.history.pushState({}, "", window.location.pathname);
+    render();
+  });
+
+  document.getElementById("copyShareLinkBtn").addEventListener("click", () => {
+    copyText(shareUrl, "Copied shareable skill link");
+  });
+
+  document.getElementById("detailCopyInstallBtn").addEventListener("click", () => {
+    copyText(installCmd, "Copied terminal install command");
+  });
+}
+
 function render() {
   document.querySelectorAll(".nav-tab").forEach((t) => {
-    t.classList.toggle("active", t.dataset.tab === state.tab);
+    const active = t.dataset.tab === state.tab || (state.tab === "detail" && t.dataset.tab === "directory");
+    t.classList.toggle("active", active);
   });
   document.querySelectorAll(".search-mode-btn").forEach((btn) => {
     const active = btn.dataset.searchMode === state.searchMode;
@@ -910,7 +1199,8 @@ function render() {
 
   els.heroSection.style.display = state.tab === "directory" ? "block" : "none";
 
-  if (state.tab === "directory") renderDirectory();
+  if (state.tab === "detail") renderSkillDetailPage();
+  else if (state.tab === "directory") renderDirectory();
   else if (state.tab === "npm") renderNpmPage();
   else if (state.tab === "audits") renderAudits();
   else if (state.tab === "install") renderInstall();
@@ -1042,6 +1332,19 @@ async function init() {
       closeSkillModal();
     }
   });
+
+  const params = new URLSearchParams(window.location.search);
+  const sharedSkill = params.get("skill");
+  if (sharedSkill) {
+    const parts = sharedSkill.split("/");
+    if (parts.length >= 3) {
+      const source = `${parts[0]}/${parts[1]}`;
+      const slug = parts.slice(2).join("/");
+      state.searchMode = "all_skills";
+      openSkillDetailPage(source, slug, null, false);
+      return;
+    }
+  }
 
   render();
 }
