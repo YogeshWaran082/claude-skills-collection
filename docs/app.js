@@ -95,6 +95,16 @@ function escapeHtml(str) {
     .replace(/"/g, "&quot;");
 }
 
+/* Safe for HTML attribute values in both single-quoted and double-quoted attrs */
+function escapeAttr(str) {
+  return String(str)
+    .replace(/&/g, "&amp;")
+    .replace(/</g, "&lt;")
+    .replace(/>/g, "&gt;")
+    .replace(/"/g, "&quot;")
+    .replace(/'/g, "&#39;");
+}
+
 function toggleTheme() {
   const html = document.documentElement;
   const next = html.getAttribute("data-theme") === "dark" ? "light" : "dark";
@@ -147,7 +157,8 @@ function getFilteredSkills() {
     return (
       s.name.toLowerCase().includes(q) ||
       s.category.toLowerCase().includes(q) ||
-      s.description.toLowerCase().includes(q)
+      s.description.toLowerCase().includes(q) ||
+      (s.content && s.content.toLowerCase().includes(q))
     );
   });
 
@@ -530,7 +541,8 @@ function renderNpmPage() {
     return (
       s.name.toLowerCase().includes(q) ||
       s.category.toLowerCase().includes(q) ||
-      s.description.toLowerCase().includes(q)
+      s.description.toLowerCase().includes(q) ||
+      (s.content && s.content.toLowerCase().includes(q))
     );
   });
 
@@ -1302,8 +1314,10 @@ async function init() {
   document.getElementById("footerNotifyForm").addEventListener("submit", (e) => {
     e.preventDefault();
     const input = document.getElementById("footerEmailInput");
+    const msg = document.getElementById("footerFormMsg");
     if (input.value.trim()) {
       showToast(`Subscribed ${input.value.trim()} for Skill Lab 2.0 updates`);
+      if (msg) { msg.textContent = "✓ You're on the list!"; setTimeout(() => { msg.textContent = ""; }, 4000); }
       input.value = "";
     }
   });

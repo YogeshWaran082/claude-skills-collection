@@ -99,10 +99,13 @@
     <!-- Dynamic Content Area -->
     <section id="viewContent"></section>
 
-    <!-- Footer (Inspired by attached Footer Concept Design) -->
+    <!-- Footer — dark glass concept design -->
     <footer class="site-footer">
       <div class="footer-glow" aria-hidden="true"></div>
+
+      <!-- TOP ROW: brand + nav/newsletter -->
       <div class="footer-top">
+        <!-- Left: brand -->
         <div class="footer-brand-col">
           <div class="footer-brand">
             <span class="footer-logo">
@@ -113,9 +116,11 @@
             <span class="footer-brand-name">Skill Lab 2.0</span>
           </div>
           <p class="footer-tagline">
-            Curated open-source Agent Skills directory for Claude Code, Antigravity, Codex, Cursor, and chat apps.
+            Curated open-source Agent Skills for Claude Code, Antigravity,<br>Codex, Cursor, and AI chat apps.
           </p>
+          <!-- Social icons row -->
           <div class="footer-socials">
+            <!-- Portfolio / Globe -->
             <a href="https://yogesh-ux-portfolio.vercel.app/" target="_blank" rel="noopener" title="Portfolio" aria-label="Portfolio">
               <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.8">
                 <circle cx="12" cy="12" r="9" />
@@ -123,11 +128,20 @@
                 <path d="M12 3a14 14 0 0 1 0 18M12 3a14 14 0 0 0 0 18" />
               </svg>
             </a>
-            <a href="https://github.com/YogeshWaran082/claude-skills-collection" target="_blank" rel="noopener" title="GitHub Repository" aria-label="GitHub">
-              <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.8">
-                <path d="M9 19c-5 1.5-5-2.5-7-3m14 6v-3.87a3.37 3.37 0 0 0-.94-2.61c3.14-.35 6.44-1.54 6.44-7A5.44 5.44 0 0 0 20 4.77 5.07 5.07 0 0 0 19.91 1S18.73.65 16 2.48a13.38 13.38 0 0 0-7 0C6.27.65 5.09 1 5.09 1A5.07 5.07 0 0 0 5 4.77a5.44 5.44 0 0 0-1.5 3.78c0 5.42 3.3 6.61 6.44 7A3.37 3.37 0 0 0 9 18.13V22" />
+            <!-- X / Twitter -->
+            <a href="https://x.com/" target="_blank" rel="noopener" title="X (Twitter)" aria-label="X">
+              <svg viewBox="0 0 24 24" fill="currentColor" stroke="none">
+                <path d="M18.244 2.25h3.308l-7.227 8.26 8.502 11.24H16.17l-5.214-6.817L4.99 21.75H1.68l7.73-8.835L1.254 2.25H8.08l4.713 6.231zm-1.161 17.52h1.833L7.084 4.126H5.117z"/>
               </svg>
             </a>
+            <!-- LinkedIn -->
+            <a href="https://linkedin.com/in/" target="_blank" rel="noopener" title="LinkedIn" aria-label="LinkedIn">
+              <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.8">
+                <rect x="2" y="2" width="20" height="20" rx="4" />
+                <path d="M7 10v7M7 7v.01M12 17v-4a2 2 0 0 1 4 0v4M12 10v7" />
+              </svg>
+            </a>
+            <!-- Email -->
             <a href="mailto:yogeshwaran.ux@gmail.com" title="Email" aria-label="Email">
               <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.8">
                 <rect x="2" y="4" width="20" height="16" rx="2" />
@@ -137,38 +151,52 @@
           </div>
         </div>
 
+        <!-- Right: nav links + newsletter -->
         <div class="footer-right-col">
-          <div class="footer-nav">
+          <nav class="footer-nav" aria-label="Footer navigation">
             <button class="footer-link-btn" data-footer-tab="directory">Directory</button>
             <button class="footer-link-btn" data-footer-tab="npm">npm &amp; CLI</button>
             <button class="footer-link-btn" data-footer-tab="audits">Audits</button>
             <button class="footer-link-btn" data-footer-tab="install">Docs</button>
             <button class="footer-link-btn" data-footer-tab="community">Community</button>
             <a href="https://yogesh-ux-portfolio.vercel.app/" target="_blank" rel="noopener">Portfolio ↗</a>
-          </div>
+          </nav>
           <div class="footer-newsletter">
             <div class="footer-news-label">Stay updated with AI skills &amp; updates</div>
-            <form class="footer-form" id="footerNotifyForm">
-              <input type="email" id="footerEmailInput" placeholder="Enter your email" required />
-              <button type="submit" class="footer-send-btn">Send</button>
+            <form class="footer-form" id="footerNotifyForm" novalidate>
+              <input type="email" id="footerEmailInput" placeholder="Enter your email" autocomplete="email" required />
+              <button type="submit" class="footer-send-btn">
+                <span>Send</span>
+                <!-- yellow/blue toggle dot matching reference design -->
+                <span class="footer-send-dot" aria-hidden="true"></span>
+              </button>
             </form>
+            <p class="footer-form-msg" id="footerFormMsg" aria-live="polite"></p>
           </div>
         </div>
       </div>
 
+      <!-- BIG WORDMARK (reference design shows brand name large in bottom area) -->
+      <div class="footer-wordmark-wrap" aria-hidden="true">
+        <span class="footer-wordmark">Skill Lab</span>
+      </div>
+
+      <!-- BOTTOM BAR -->
       <div class="footer-bottom">
         <div class="footer-legal">
           <div class="footer-meta-links">
-            <span>90 Skills</span>
-            <span>13 Categories</span>
-            <a href="https://github.com/YogeshWaran082/claude-skills-collection" target="_blank" rel="noopener">GitHub Repo</a>
+            <span>License</span>
+            <a href="https://github.com/YogeshWaran082/claude-skills-collection/blob/main/STYLE_GUIDE.md" target="_blank" rel="noopener">Style guide</a>
+            <a href="https://github.com/YogeshWaran082/claude-skills-collection/commits/main" target="_blank" rel="noopener">Change log</a>
+            <a href="https://github.com/YogeshWaran082/claude-skills-collection" target="_blank" rel="noopener">GitHub</a>
           </div>
           <div class="footer-credit">
-            © 2026 Skill Lab 2.0 · Created by
+            © 2026 Skill Lab 2.0 &nbsp;·&nbsp; Designed by
             <a href="https://yogesh-ux-portfolio.vercel.app/" target="_blank" rel="noopener">Yogesh Waran</a>
+            &nbsp;·&nbsp; Powered by
+            <a href="https://vercel.com" target="_blank" rel="noopener">Vercel</a>
           </div>
         </div>
-        <div class="footer-wordmark" aria-hidden="true">Skill Lab</div>
       </div>
     </footer>
   </main>
