@@ -1,6 +1,6 @@
 # Claude Skills Collection
 
-A curated, folder-organized collection of **86 Claude Skills** (`*-SKILL.md`) covering design, research, video production, engineering, app integrations, DevOps, product & marketing, office documents, data & finance, sales & support, HR & legal, and operations.
+A curated, folder-organized collection of **90 Claude Skills** (`*-SKILL.md`) covering design, research, video production, engineering, app integrations, DevOps, product & marketing, office documents, data & finance, sales & support, HR & legal, and operations.
 
 See [`COMMUNITY_RESOURCES.md`](./COMMUNITY_RESOURCES.md) for upstream community repositories and plugin directories.
 
@@ -8,11 +8,11 @@ See [`COMMUNITY_RESOURCES.md`](./COMMUNITY_RESOURCES.md) for upstream community 
 
 | Folder | Focus | Skills |
 | :--- | :--- | :---: |
-| [`designing/`](./designing) | UI/UX design, design systems, branding, Figma-to-code, landing pages | 17 |
+| [`designing/`](./designing) | UI/UX design, generative art, design systems, branding, Figma-to-code | 19 |
 | [`ux-research-and-copy/`](./ux-research-and-copy) | User research, market research, synthesis, UX & long-form copy | 5 |
-| [`video-and-motion/`](./video-and-motion) | Video direction, animatics, beat boards, AI video prompting | 8 |
+| [`video-and-motion/`](./video-and-motion) | Video direction, animatics, beat boards, Slack GIFs, AI video | 9 |
 | [`engineering/`](./engineering) | Backend, frontend, security, browser testing, MCP, code review, API & SQL | 13 |
-| [`integrations/`](./integrations) | GitHub, Slack, Jira, Confluence, Google Calendar, Stripe integrations | 6 |
+| [`integrations/`](./integrations) | Figma MCP, GitHub, Slack, Jira, Confluence, Google Calendar, Stripe | 7 |
 | [`devops-and-docs/`](./devops-and-docs) | Git/PRs, commit commands, CI/CD, incident response, changelogs, docs | 7 |
 | [`product-and-growth/`](./product-and-growth) | PRDs, specs, PM, Scrum, campaigns, local SEO, social & copy | 9 |
 | [`documents-and-office/`](./documents-and-office) | Word (`.docx`), PDF, PowerPoint (`.pptx`), Excel (`.xlsx`) | 4 |
@@ -28,6 +28,7 @@ See [`COMMUNITY_RESOURCES.md`](./COMMUNITY_RESOURCES.md) for upstream community 
 
 ### `designing/`
 - [`accessibility-review-SKILL.md`](./designing/accessibility-review-SKILL.md) — WCAG 2.1 AA accessibility audit
+- [`algorithmic-art-SKILL.md`](./designing/algorithmic-art-SKILL.md) — Generative art & p5.js visual patterns
 - [`artifacts-builder-SKILL.md`](./designing/artifacts-builder-SKILL.md) — Multi-component HTML artifacts
 - [`brand-guidelines-SKILL.md`](./designing/brand-guidelines-SKILL.md) — Official brand colors and typography styling
 - [`brand-identity-system-SKILL.md`](./designing/brand-identity-system-SKILL.md) — Brand identity spec (palette, fonts, tone)
@@ -44,6 +45,7 @@ See [`COMMUNITY_RESOURCES.md`](./COMMUNITY_RESOURCES.md) for upstream community 
 - [`landing-page-generator-SKILL.md`](./designing/landing-page-generator-SKILL.md) — Conversion-focused responsive landing pages
 - [`premium-3d-landing-SKILL.md`](./designing/premium-3d-landing-SKILL.md) — Single-file 3D CSS & GSAP landing pages
 - [`theme-factory-SKILL.md`](./designing/theme-factory-SKILL.md) — Theme styling for slides, docs, and reports
+- [`ui-ux-pro-max-SKILL.md`](./designing/ui-ux-pro-max-SKILL.md) — Advanced UI/UX color theory, typography & responsive craft
 
 ### `ux-research-and-copy/`
 - [`content-research-writer-SKILL.md`](./ux-research-and-copy/content-research-writer-SKILL.md) — Deep-dive, cited long-form articles & guides
@@ -56,6 +58,7 @@ See [`COMMUNITY_RESOURCES.md`](./COMMUNITY_RESOURCES.md) for upstream community 
 - [`ai-video-prompt-director-SKILL.md`](./video-and-motion/ai-video-prompt-director-SKILL.md) — Shot lists & prompts for AI video tools
 - [`cinematic-shot-prompting-SKILL.md`](./video-and-motion/cinematic-shot-prompting-SKILL.md) — Camera movement & cinematic motion prompts
 - [`demo-video-SKILL.md`](./video-and-motion/demo-video-SKILL.md) — Product walkthrough & demo video production
+- [`slack-gif-creator-SKILL.md`](./video-and-motion/slack-gif-creator-SKILL.md) — Custom, loopable Slack animated GIFs
 - [`video-animatic-SKILL.md`](./video-and-motion/video-animatic-SKILL.md) — Motion graphics, kinetic type, animated charts
 - [`video-beat-board-SKILL.md`](./video-and-motion/video-beat-board-SKILL.md) — Voice-over pacing & beat timing
 - [`video-conform-SKILL.md`](./video-and-motion/video-conform-SKILL.md) — Audio mixing, loudness, and final delivery
@@ -79,6 +82,7 @@ See [`COMMUNITY_RESOURCES.md`](./COMMUNITY_RESOURCES.md) for upstream community 
 
 ### `integrations/`
 - [`confluence-expert-SKILL.md`](./integrations/confluence-expert-SKILL.md) — Confluence spaces, pages & documentation workflows
+- [`figma-mcp-connector-SKILL.md`](./integrations/figma-mcp-connector-SKILL.md) — Read Figma designs & tokens via MCP into code
 - [`github-workflow-SKILL.md`](./integrations/github-workflow-SKILL.md) — GitHub PRs, issues, releases & `gh` CLI workflows
 - [`googlecalendar-automation-SKILL.md`](./integrations/googlecalendar-automation-SKILL.md) — Google Calendar event & scheduling automation
 - [`jira-expert-SKILL.md`](./integrations/jira-expert-SKILL.md) — Jira workflows, JQL, sprints & issue automation
