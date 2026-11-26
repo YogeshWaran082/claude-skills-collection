@@ -3,7 +3,7 @@
   "outputDirectory": "docs",
   "functions": {
     "api/all-skills.js": {
-      "includeFiles": "data/skills_catalog.db"
+      "includeFiles": "{data/skills_catalog.db,node_modules/sql.js/dist/sql-wasm.wasm}"
     }
   }
 }

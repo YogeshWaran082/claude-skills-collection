@@ -14,7 +14,9 @@ const TARGET_COUNT = 566000;
 let sqlPromise = null;
 function getSql() {
   if (!sqlPromise) {
-    sqlPromise = initSqlJs();
+    sqlPromise = initSqlJs({
+      locateFile: (file) => path.join(process.cwd(), "node_modules", "sql.js", "dist", file),
+    });
   }
   return sqlPromise;
 }

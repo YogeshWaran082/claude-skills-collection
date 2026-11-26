@@ -129,33 +129,34 @@ def update_checkpoint(conn: sqlite3.Connection, feed_key: str, offset_pos: int, 
 def ingest_leaderboard(conn: sqlite3.Connection, token: str, max_rows: int = 100000, batch_size: int = 100) -> None:
     feed_key = "leaderboard:global"
     row = conn.execute("SELECT offset_pos, status, imported_count FROM ingest_checkpoints WHERE feed_key = ?", (feed_key,)).fetchone()
-    offset = row[0] if row else 0
+    page = row[0] if row else 0
     total_imported = row[2] if row else 0
 
-    while offset < max_rows:
-        url = f"{API_BASE}/skills?limit={batch_size}&offset={offset}"
+    while page * batch_size < max_rows:
+        url = f"{API_BASE}/skills?limit={batch_size}&page={page}"
         try:
             payload = fetch_json(url, token)
         except urllib.error.HTTPError as e:
             if e.code in (401, 403):
-                update_checkpoint(conn, feed_key, offset, "auth_required", total_imported)
-                print(f"Authentication required ({e.code}) at offset {offset}. Provide a valid VERCEL_OIDC_TOKEN.", file=sys.stderr)
+                update_checkpoint(conn, feed_key, page, "auth_required", total_imported)
+                print(f"Authentication required ({e.code}) at page {page}. Provide a valid VERCEL_OIDC_TOKEN.", file=sys.stderr)
                 sys.exit(2)
             raise
 
-        items = payload.get("skills") or payload.get("results") or (payload if isinstance(payload, list) else [])
+        items = payload.get("data") or payload.get("skills") or payload.get("results") or (payload if isinstance(payload, list) else [])
         if not items:
-            update_checkpoint(conn, feed_key, offset, "completed", total_imported)
+            update_checkpoint(conn, feed_key, page, "completed", total_imported)
             break
 
         inserted = upsert_skills(conn, items)
-        offset += len(items)
+        page += 1
         total_imported += inserted
-        update_checkpoint(conn, feed_key, offset, "in_progress", total_imported)
-        print(f"[leaderboard] offset={offset} total_processed={total_imported}")
+        pagination = payload.get("pagination") or {}
+        has_more = pagination.get("hasMore", len(items) == batch_size)
+        update_checkpoint(conn, feed_key, page, "in_progress" if has_more else "completed", total_imported)
+        print(f"[leaderboard] page={page} total_processed={total_imported} api_total={pagination.get('total')}")
 
-        if len(items) < batch_size:
-            update_checkpoint(conn, feed_key, offset, "completed", total_imported)
+        if not has_more:
             break
 
 
@@ -182,7 +183,7 @@ def ingest_repos(conn: sqlite3.Connection, token: str, repos_file: str) -> None:
             print(f"[repo] {repo} returned HTTP {e.code}, skipping", file=sys.stderr)
             continue
 
-        items = payload.get("skills") or payload.get("results") or (payload if isinstance(payload, list) else [])
+        items = payload.get("data") or payload.get("skills") or payload.get("results") or (payload if isinstance(payload, list) else [])
         inserted = upsert_skills(conn, items)
         update_checkpoint(conn, feed_key, inserted, "completed", inserted)
         print(f"[repo] {repo}: synced {inserted} skills")

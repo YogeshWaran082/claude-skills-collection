@@ -84,11 +84,13 @@ export default async function handler(req, res) {
     const payload = await upstreamRes.json();
     const rawItems = Array.isArray(payload)
       ? payload
-      : Array.isArray(payload?.skills)
-        ? payload.skills
-        : Array.isArray(payload?.results)
-          ? payload.results
-          : [];
+      : Array.isArray(payload?.data)
+        ? payload.data
+        : Array.isArray(payload?.skills)
+          ? payload.skills
+          : Array.isArray(payload?.results)
+            ? payload.results
+            : [];
 
     const skills = rawItems.slice(0, limit).map(normalizeSkill);
     const verifiedTotal =
