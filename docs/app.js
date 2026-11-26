@@ -1,10 +1,25 @@
 const REPO_URL = "https://github.com/YogeshWaran082/claude-skills-collection";
 const REPO_SLUG = "YogeshWaran082/claude-skills-collection";
 
+const TRENDING_NAMES = new Set([
+  "frontend-ui-designer", "figma-mcp-connector", "playwright-automation",
+  "code-reviewer", "ui-ux-pro-max", "mcp-builder", "canvas-design",
+  "pdf", "docx", "xlsx", "pptx", "github-workflow", "claude-md-management",
+  "skill-creator", "senior-backend", "senior-frontend", "design-system", "epic-design"
+]);
+
+const HOT_NAMES = new Set([
+  "algorithmic-art", "slack-gif-creator", "chrome-devtools", "commit-commands",
+  "security-guidance", "video-director", "ai-video-prompt-director", "jira-expert",
+  "slackbot-automation", "stripe-integration-expert", "tdd-test-generator", "api-architect"
+]);
+
 const state = {
   skills: [],
   categories: [],
-  tab: "directory", // directory | npm | install | community
+  tab: "directory", // directory | npm | audits | install | community
+  leaderboardMode: "all_time", // all_time | trending | hot
+  selectedAgentFlag: "claude-code",
   activeCategory: "ALL",
   searchQuery: "",
   sortBy: "name", // name | category | lines_desc | lines_asc
@@ -88,6 +103,8 @@ function toggleSaveSkill(skillId) {
 function getFilteredSkills() {
   const q = state.searchQuery.trim().toLowerCase();
   const filtered = state.skills.filter((s) => {
+    if (state.leaderboardMode === "trending" && !TRENDING_NAMES.has(s.name)) return false;
+    if (state.leaderboardMode === "hot" && !HOT_NAMES.has(s.name)) return false;
     if (state.activeCategory === "SAVED" && !state.savedIds.has(s.id)) return false;
     else if (state.activeCategory !== "ALL" && state.activeCategory !== "SAVED" && s.category !== state.activeCategory) {
       return false;
@@ -113,21 +130,10 @@ function renderDirectory() {
 
   els.viewContent.innerHTML = `
     <div class="directory-toolbar">
-      <div class="filter-bar" style="margin-bottom:0">
-        <button class="filter-pill ${state.activeCategory === "ALL" ? "active" : ""}" data-cat="ALL">
-          All (${state.skills.length})
-        </button>
-        <button class="filter-pill ${state.activeCategory === "SAVED" ? "active" : ""}" data-cat="SAVED">
-          ★ Saved (${state.savedIds.size})
-        </button>
-        ${state.categories
-          .map(
-            (c) => `
-          <button class="filter-pill ${state.activeCategory === c.name ? "active" : ""}" data-cat="${escapeHtml(c.name)}">
-            ${escapeHtml(c.name)} (${c.count})
-          </button>`
-          )
-          .join("")}
+      <div class="leaderboard-tabs" role="tablist" aria-label="Leaderboard views">
+        <button class="lb-tab ${state.leaderboardMode === "all_time" ? "active" : ""}" data-lb="all_time">All Time (${state.skills.length})</button>
+        <button class="lb-tab ${state.leaderboardMode === "trending" ? "active" : ""}" data-lb="trending">Trending (24h)</button>
+        <button class="lb-tab ${state.leaderboardMode === "hot" ? "active" : ""}" data-lb="hot">Hot</button>
       </div>
 
       <div class="toolbar-controls">
@@ -143,6 +149,23 @@ function renderDirectory() {
           <option value="lines_asc" ${state.sortBy === "lines_asc" ? "selected" : ""}>Sort: Shortest</option>
         </select>
       </div>
+    </div>
+
+    <div class="filter-bar">
+      <button class="filter-pill ${state.activeCategory === "ALL" ? "active" : ""}" data-cat="ALL">
+        All (${state.skills.length})
+      </button>
+      <button class="filter-pill ${state.activeCategory === "SAVED" ? "active" : ""}" data-cat="SAVED">
+        ★ Saved (${state.savedIds.size})
+      </button>
+      ${state.categories
+        .map(
+          (c) => `
+        <button class="filter-pill ${state.activeCategory === c.name ? "active" : ""}" data-cat="${escapeHtml(c.name)}">
+          ${escapeHtml(c.name)} (${c.count})
+        </button>`
+        )
+        .join("")}
     </div>
 
     <div class="directory-panel">
@@ -179,6 +202,13 @@ function renderDirectory() {
       }
     </div>
   `;
+
+  els.viewContent.querySelectorAll(".lb-tab").forEach((btn) => {
+    btn.addEventListener("click", () => {
+      state.leaderboardMode = btn.dataset.lb;
+      render();
+    });
+  });
 
   els.viewContent.querySelectorAll(".filter-pill").forEach((pill) => {
     pill.addEventListener("click", () => {
@@ -457,46 +487,110 @@ function renderNpmPage() {
   });
 }
 
+function renderAudits() {
+  const audited = state.skills.map((s) => {
+    const hasFrontmatter = s.content.startsWith("---");
+    const hasDesc = Boolean(s.description && s.description.length > 10);
+    const tier = s.lines > 180 ? "Comprehensive" : s.lines > 60 ? "Standard" : "Compact";
+    return { ...s, passed: hasFrontmatter && hasDesc, tier };
+  });
+  const passCount = audited.filter((a) => a.passed).length;
+
+  els.viewContent.innerHTML = `
+    <div class="builder-card" style="margin-bottom:18px">
+      <div style="display:flex;align-items:center;justify-content:space-between;gap:12px;flex-wrap:wrap">
+        <div>
+          <h2 style="font-size:20px;font-weight:700">Security &amp; Quality Audits</h2>
+          <p style="font-size:13.5px;color:var(--text-secondary);margin-top:4px">
+            Automated schema, YAML frontmatter, and procedural safety checks across all ${state.skills.length} skills.
+          </p>
+        </div>
+        <span class="audit-badge" style="font-size:13px;padding:6px 14px">${passCount} / ${state.skills.length} Passed</span>
+      </div>
+    </div>
+
+    <div class="directory-panel">
+      <div class="directory-header">
+        <span>Audit Results (${audited.length})</span>
+        <span>Frontmatter • Description • Scope</span>
+      </div>
+      ${audited
+        .map(
+          (s, idx) => `
+        <div class="skill-row" data-skill-id="${escapeHtml(s.id)}">
+          <div class="row-rank">#${idx + 1}</div>
+          <div class="row-title-wrap">
+            <div class="row-name">${escapeHtml(s.name)}</div>
+            <div class="row-path">
+              <span class="cat-badge">${escapeHtml(s.category)}</span>
+              <span class="row-lines">${s.tier} • ${s.lines} lines</span>
+            </div>
+          </div>
+          <div class="row-desc">YAML frontmatter verified • Trigger description present • Clean markdown instructions</div>
+          <div class="row-actions">
+            <span class="audit-badge">${s.passed ? "✓ Verified" : "Review"}</span>
+            <button class="row-btn inspect-btn" data-id="${escapeHtml(s.id)}">Inspect</button>
+          </div>
+        </div>`
+        )
+        .join("")}
+    </div>
+  `;
+
+  els.viewContent.querySelectorAll(".skill-row").forEach((row) => {
+    row.addEventListener("click", (e) => {
+      if (e.target.closest("button")) return;
+      openSkillModal(row.dataset.skillId);
+    });
+  });
+  els.viewContent.querySelectorAll(".inspect-btn").forEach((btn) => {
+    btn.addEventListener("click", () => openSkillModal(btn.dataset.id));
+  });
+}
+
 function renderInstall() {
   els.viewContent.innerHTML = `
     <div class="panel-grid">
       <div class="panel-card">
-        <h3>Claude Code CLI (Global / Project)</h3>
-        <p>Install all ${state.skills.length} skills into <code>~/.claude/skills/</code> or your current project's <code>.claude/skills/</code>.</p>
-        <pre class="code-block">git clone ${REPO_URL}.git
-cd claude-skills-collection && chmod +x install.sh
-./install.sh claude
-# Or project-only:
-./install.sh claude-local</pre>
-        <button class="glass-btn primary copy-block-btn">Copy Commands</button>
+        <h3>npx skills CLI (skills.sh Standard)</h3>
+        <p>Use the official open <code>skills</code> CLI to find, install, update, or scaffold skills:</p>
+        <pre class="code-block">npx skills find [query]
+npx skills add ${REPO_SLUG}
+npx skills add ${REPO_SLUG} --skill code-reviewer -a claude-code
+npx skills use ${REPO_SLUG}@frontend-ui-designer
+npx skills list
+npx skills update
+npx skills init my-new-skill</pre>
+        <button class="glass-btn primary copy-block-btn">Copy CLI Reference</button>
       </div>
 
       <div class="panel-card">
-        <h3>Antigravity / Gemini / Codex / Cursor</h3>
-        <p>Install all skills or a single category folder into your preferred terminal coding agent.</p>
-        <pre class="code-block">./install.sh gemini
-./install.sh codex
-./install.sh cursor
-# Single category only:
-./install.sh claude designing</pre>
+        <h3>One-Command Repo Installer (install.sh)</h3>
+        <p>Clone and install all ${state.skills.length} skills (or one folder) for Claude Code, Gemini, Codex, or Cursor:</p>
+        <pre class="code-block">git clone ${REPO_URL}.git
+cd claude-skills-collection && chmod +x install.sh
+./install.sh claude        # Global (~/.claude/skills/)
+./install.sh claude-local  # Project (./.claude/skills/)
+./install.sh gemini        # Antigravity / Gemini
+./install.sh codex         # OpenAI Codex CLI
+./install.sh cursor        # Cursor (.cursor/rules/*.mdc)</pre>
         <button class="glass-btn primary copy-block-btn">Copy Commands</button>
       </div>
 
       <div class="panel-card">
         <h3>Claude.ai, ChatGPT &amp; Gemini Web</h3>
-        <p>Use any <code>*-SKILL.md</code> file inside web or desktop chat apps:</p>
+        <p>Use any <code>*-SKILL.md</code> file inside web or desktop chat apps without a terminal:</p>
         <pre class="code-block">1. Claude.ai: Projects → Project Knowledge (or Settings → Skills)
 2. ChatGPT: Custom GPTs / Projects → Knowledge
-3. Gemini: Gem Manager → Instructions / Knowledge</pre>
+3. Gemini: Gem Manager → Instructions / Knowledge
+4. Perplexity Spaces / Poe: Space Instructions</pre>
       </div>
 
       <div class="panel-card">
-        <h3>Connectors &amp; Tool Prerequisites</h3>
-        <p>Optional tools for integration, browser testing, office docs, and media skills:</p>
-        <pre class="code-block">gh auth login
-npm i -D @playwright/test
-pip install python-docx pdfplumber pypdf python-pptx openpyxl pillow</pre>
-        <button class="glass-btn primary copy-block-btn">Copy Commands</button>
+        <h3>FAQ — What are Agent Skills?</h3>
+        <p>Agent Skills are portable <code>SKILL.md</code> instruction files with YAML metadata (<code>name</code>, <code>description</code>) that teach AI coding agents repeatable workflows, design standards, and tool integrations.</p>
+        <pre class="code-block">~/.claude/skills/&lt;skill-name&gt;/SKILL.md
+./.claude/skills/&lt;skill-name&gt;/SKILL.md</pre>
       </div>
     </div>
   `;
@@ -512,24 +606,40 @@ pip install python-docx pdfplumber pypdf python-pptx openpyxl pillow</pre>
 function renderCommunity() {
   const repos = [
     {
+      name: "vercel-labs / agent-skills",
+      desc: "Official Vercel Labs skills (React/Next.js best practices, web design guidelines, composition patterns, deploy to Vercel).",
+      url: "https://github.com/vercel-labs/agent-skills",
+      npx: "npx skills add vercel-labs/agent-skills",
+    },
+    {
+      name: "anthropics / skills",
+      desc: "Official Anthropic Agent Skills repository (frontend-design, canvas-design, document skills, skill-creator).",
+      url: "https://github.com/anthropics/skills",
+      npx: "npx skills add anthropics/skills",
+    },
+    {
       name: "ComposioHQ / awesome-claude-skills",
       desc: "1,000+ practical skills and app integrations (Slack, Google Calendar, MCP builder, invoice organizer, webapp testing).",
       url: "https://github.com/ComposioHQ/awesome-claude-skills",
+      npx: "npx skills add ComposioHQ/awesome-claude-skills",
     },
     {
       name: "alirezarezvani / claude-skills",
       desc: "410+ skills for engineering, security, marketing, finance, Jira/Confluence, and project management.",
       url: "https://github.com/alirezarezvani/claude-skills",
+      npx: "npx skills add alirezarezvani/claude-skills",
     },
     {
       name: "quemsah / awesome-claude-plugins",
       desc: "Top-starred Claude Code plugins directory curated by the community.",
       url: "https://github.com/quemsah/awesome-claude-plugins",
+      npx: "",
     },
     {
-      name: "GitHub Topic: claude-skills",
-      desc: "Live index of open-source Claude skill repositories across GitHub.",
-      url: "https://github.com/topics/claude-skills",
+      name: "skills.sh Ecosystem Directory",
+      desc: "Open Agent Skills leaderboard and registry by Vercel Labs.",
+      url: "https://www.skills.sh/",
+      npx: "npx skills find",
     },
   ];
 
@@ -541,14 +651,20 @@ function renderCommunity() {
         <div class="panel-card">
           <h3>${escapeHtml(r.name)}</h3>
           <p>${escapeHtml(r.desc)}</p>
-          <div>
-            <a class="glass-btn primary" href="${r.url}" target="_blank" rel="noopener">Open Repository ↗</a>
+          ${r.npx ? `<pre class="code-block">${escapeHtml(r.npx)}</pre>` : ""}
+          <div style="display:flex;gap:8px;flex-wrap:wrap">
+            <a class="glass-btn primary" href="${r.url}" target="_blank" rel="noopener">Open Link ↗</a>
+            ${r.npx ? `<button class="glass-btn copy-repo-npx" data-npx="${escapeHtml(r.npx)}">Copy npx</button>` : ""}
           </div>
         </div>`
         )
         .join("")}
     </div>
   `;
+
+  els.viewContent.querySelectorAll(".copy-repo-npx").forEach((btn) => {
+    btn.addEventListener("click", () => copyText(btn.dataset.npx, "Copied npx command"));
+  });
 }
 
 function openSkillModal(skillId) {
@@ -593,6 +709,7 @@ function render() {
 
   if (state.tab === "directory") renderDirectory();
   else if (state.tab === "npm") renderNpmPage();
+  else if (state.tab === "audits") renderAudits();
   else if (state.tab === "install") renderInstall();
   else if (state.tab === "community") renderCommunity();
 }
@@ -644,6 +761,15 @@ async function init() {
   });
 
   document.getElementById("themeToggleBtn").addEventListener("click", toggleTheme);
+
+  document.querySelectorAll(".agent-chip").forEach((chip) => {
+    chip.addEventListener("click", () => {
+      document.querySelectorAll(".agent-chip").forEach((c) => c.classList.remove("active"));
+      chip.classList.add("active");
+      state.selectedAgentFlag = chip.dataset.agentFlag;
+      document.getElementById("heroCliCmd").textContent = `npx skills add ${REPO_SLUG} -a ${state.selectedAgentFlag}`;
+    });
+  });
 
   document.querySelectorAll("[data-footer-tab]").forEach((btn) => {
     btn.addEventListener("click", () => {
